@@ -1,0 +1,1901 @@
+//@version=5
+indicator(title='Minervini Core RS Criteria', shorttitle='CoreRSCriteria', overlay=true)
+//source = close
+
+//ENABLE HEALTH CHECKS
+//healthcheckonoff = input(false, title='Enable Health Checks')
+
+
+
+//US ACCOUNT SIZE
+
+us_account_size = input(500000000, title='Full US Account Size')
+us_account_size_str = str.tostring(us_account_size)
+
+us_account_size_75 = us_account_size *.75
+us_account_size_50 = us_account_size *.50
+us_account_size_25 = us_account_size *.25
+us_account_size_12p5 = us_account_size *.125
+us_account_size_6p25 = us_account_size *.0625
+
+us_account_size_75_str = str.tostring(us_account_size_75)
+us_account_size_50_str = str.tostring(us_account_size_50)
+us_account_size_25_str = str.tostring(us_account_size_25)
+us_account_size_12p5_str = str.tostring(us_account_size_12p5)
+us_account_size_6p25_str = str.tostring(us_account_size_6p25)
+
+
+ninety_percent_account_size = us_account_size - (us_account_size * .1)
+ninety_percent_account_size_str = str.tostring(ninety_percent_account_size)
+//END US ACCOUNT SIZE ///
+
+Trade100ofAcc = input(true, title='Minimum Trade 100% of Acc *MUST ALWAYS BE CHECKED*')
+Trade75ofAcc = input(true, title='Minimum Trade 75% of Acc')
+Trade50ofAcc = input(true, title='Minimum Trade 50% of Acc')
+
+
+
+
+// 2.25 ATR Percentage 
+TwoPoint25percentage = input.float(6, step = 0.1, title='2.25 ATR %')
+////END 2.25 ATR Percentage
+
+//MOVING AVERAGES CALCS///////////////////////////////////////////////////////////////////////////////
+
+aaa = input(false, title='Enable 1st MA')
+bbb = input(true, title='Enable 2nd MA')
+ccc = input(true, title='Enable 3rd MA')
+ddd = input(true, title='Enable 4th MA')
+eee = input(true, title='Enable 5th MA')
+
+lenlen1 = input.int(35, minval=1, title='Length1')
+lenlen2 = input.int(50, minval=1, title='Length2')
+lenlen3 = input.int(150, minval=1, title='Length3')
+lenlen4 = input.int(200, minval=1, title='Length4')
+lenlen5 = input.int(20, minval=1, title='Length5')
+
+srcsrc1 = input(close, title='Source1')
+srcsrc2 = input(close, title='Source2')
+srcsrc3 = input(close, title='Source3')
+srcsrc4 = input(close, title='Source4')
+srcsrc5 = input(close, title='Source5')
+
+
+outout1 = ta.sma(srcsrc1, lenlen1)
+outout2 = ta.sma(srcsrc2, lenlen2)
+outout3 = ta.sma(srcsrc3, lenlen3)
+outout4 = ta.sma(srcsrc4, lenlen4)
+outout5 = ta.sma(srcsrc5, lenlen5)
+
+srcsrc6 = (outout5 + outout1) / 2
+
+
+outout6 = ta.sma(srcsrc6, (lenlen5 + lenlen1) / 2)
+
+plot(aaa and outout1 ? outout1 : na, title='SMA1', color=color.new(#f06292, 20), linewidth=2)
+plot(bbb and outout2 ? outout2 : na, title='SMA2', color=color.new(#4747f0, 20), linewidth=2)
+plot(ccc and outout3 ? outout3 : na, title='SMA3', color=color.new(#FF0000, 30), linewidth=2)
+plot(ddd and outout4 ? outout4 : na, title='SMA4', color=color.new(#FFFF00, 30), linewidth=2)
+plot(eee and outout5 ? outout5 : na, title='SMA5', color=color.new(#12c812, 12), linewidth=1)
+plot(outout6 ? srcsrc6 : na, title='AV OF SMA1+SMA5', color=color.new(#00d6fc, 12), linewidth=4)
+
+//END MOVING AVERGES CALCS///////////////////////////////////////////////////////////////
+
+//VOLUME AND ACCOUNT SIZE CALCS////////////////////////////////////////////
+
+us_account_halved = us_account_size/2
+volume_allowed_to_trade = us_account_halved * 10
+volume_allowed_to_trade_str = str.tostring(volume_allowed_to_trade, '#')
+
+scalefactor = input(30, 'MA Length')
+volMA = ta.sma(volume, scalefactor)
+
+volume_allowed_to_trade_minus_20_percent = volume_allowed_to_trade - (volume_allowed_to_trade * .2)
+volume_allowed_to_trade_minus_20_percent_str = str.tostring(volume_allowed_to_trade_minus_20_percent, '#')
+volume_greater_than_volume_allowed_to_trade_minus_20_percent = volume > volume_allowed_to_trade_minus_20_percent
+
+volMA_str = str.tostring(volMA, '#')
+volume_str = str.tostring(volume, '#')
+
+volMA_greater_than_volume_allowed_to_trade = volMA > volume_allowed_to_trade
+volume_core_qualifier = volMA_greater_than_volume_allowed_to_trade and volume_greater_than_volume_allowed_to_trade_minus_20_percent
+
+
+volMA_lessthan_200k = volMA < 150000
+vol_less_than_100k = volume < 100000
+
+symbolClose = request.security('USDAUD', '', close)
+
+volUSposition = volMA * .1
+volUSposition_str = str.tostring(volUSposition, '#')
+
+volAUposition = volMA * symbolClose * .1
+volAUposition_str = str.tostring(volAUposition, '#')
+
+us_vol_greater_than_90percent_account_size = volUSposition > ninety_percent_account_size
+
+
+//END VOLUME AND ACCOUNT SIZE CALCS////////////////////////////////////////////
+
+//NEW VOLUME CORE CRITERIA CALCS
+volume_core_qualifier_100 = volUSposition >= us_account_size
+volume_core_qualifier_75 = volUSposition >= us_account_size *.75
+volume_core_qualifier_50 = volUSposition >= us_account_size *.5
+volume_core_qualifier_25 = volUSposition >= us_account_size *.25
+volume_core_qualifier_12p5 = volUSposition >= us_account_size *.125
+volume_core_qualifier_6p25 = volUSposition >= us_account_size *.0625
+
+all_volume_core_qualifiers = if Trade100ofAcc == true and Trade75ofAcc == true and Trade50ofAcc == true
+	volume_core_qualifier_100 or volume_core_qualifier_75 or volume_core_qualifier_50
+else if Trade100ofAcc == true and Trade75ofAcc == true and Trade50ofAcc == false
+	volume_core_qualifier_100 or volume_core_qualifier_75
+else if Trade100ofAcc == true and Trade75ofAcc == false and Trade50ofAcc == false
+	volume_core_qualifier_100
+
+
+
+//all_volume_core_qualifiers = volume_core_qualifier_100 or volume_core_qualifier_75 or volume_core_qualifier_50 
+//or volume_core_qualifier_25 or volume_core_qualifier_12p5 or volume_core_qualifier_6p25
+
+voldescription = if Trade100ofAcc == true and Trade75ofAcc == true and Trade50ofAcc == true
+    "CAN TRADE TO 50% OF ACCOUNT"
+else if Trade100ofAcc == true and Trade75ofAcc == true and Trade50ofAcc == false
+    "CAN TRADE TO 75% OF ACCOUNT"
+else if Trade100ofAcc == true and Trade75ofAcc == false and Trade50ofAcc == false
+    "CAN TRADE TO 100% OF ACCOUNT"
+
+//KELTNER CALCS///////////////////////////////////////////////////////////////////////////////////
+w0 = 0
+smooth = 20
+w025 = 0.25
+w0333 = 0.333
+w05 = 0.5
+w75 = 0.75
+w1 = 1
+w125 = 1.25
+w15 = 1.5
+w175 = 1.75
+w2 = 2
+w225 = 2.25
+w25 = 2.5
+w275 = 2.75
+w3 = 3
+w325 = 3.25
+w35 = 3.5
+w375 = 3.75
+w4 = 4
+w45 = 4.5
+w475 = 4.75
+w5 = 5
+w55 = 5.5
+w575 = 5.75
+w6 = 6
+w625 = 6.25
+w7 = input(1, title='ATR Size')
+// w7 = input(1.45, minval=0, title="Profit Target")
+
+Mid = ta.sma(close, smooth)
+ATR = ta.sma(ta.tr, smooth)
+
+Line1 = Mid + w6 * ATR
+Line625 = Mid + w625 * ATR
+Line575 = Mid + w575 * ATR
+Line55 = Mid + w55 * ATR
+Line2 = Mid + w5 * ATR
+Line475 = Mid + w475 * ATR
+Line45 = Mid + w45 * ATR
+Line3 = Mid + w4 * ATR
+Line375 = Mid + w375 * ATR
+Line35 = Mid + w35 * ATR
+Line325 = Mid + w325 * ATR
+Line4 = Mid + w3 * ATR
+Line275 = Mid + w275 * ATR
+Line25 = Mid + w25 * ATR
+Line225 = Mid + w225 * ATR
+Line5 = Mid + w2 * ATR
+Line175 = Mid + w175 * ATR
+Line15 = Mid + w15 * ATR
+Line125 = Mid + w125 * ATR
+Line6 = Mid + w1 * ATR
+Line05 = Mid + w05 * ATR
+Line75 = Mid + w75 * ATR
+Line0333 = Mid + w0333 * ATR
+Line025 = Mid + w025 * ATR
+
+LineMid = Mid
+
+Line025NEG = Mid - w025 * ATR
+Line05NEG = Mid - w05 * ATR
+Line75NEG = Mid - w75 * ATR
+Line7 = Mid - w1 * ATR
+Line125NEG = Mid - w125 * ATR
+Line175NEG = Mid - w175 * ATR
+Line8 = Mid - w2 * ATR
+Line225NEG = Mid - w225 * ATR
+Line250NEG = Mid - w25 * ATR
+Line9 = Mid - w3 * ATR
+Line10 = Mid - w4 * ATR
+Line11 = Mid - w5 * ATR
+Line12 = Mid - w6 * ATR
+
+Line13 = Mid + w0 * ATR
+Line14 = Mid + w7 * ATR
+
+//END OF KELTNER CALCS////////////////////////////////////////////////////////////////////////////
+
+//PLOT KELTNER CHANNELS /////////////////////////////////////////////////////////////////////
+
+plot(Line575, color=color.new(#c22c2c, 10), linewidth=1, title='5.75')
+plot(Line55, color=color.new(#505050, 10), linewidth=1, title='5.5')
+plot(Line475, color=color.new(#c22c2c, 10), linewidth=1, title='4.75')
+plot(Line45, color=color.new(#505050, 10), linewidth=1, title='4.5')
+plot(Line375, color=color.new(#c22c2c, 10), linewidth=1, title='3.75')
+plot(Line35, color=color.new(#505050, 10), linewidth=1, title='3.5')
+plot(Line275, color=color.new(#c22c2c, 10), linewidth=1, title='2.75')
+plot(Line25, color=color.new(#505050, 10), linewidth=1, title='2.5')
+plot(Line175, color=color.new(#c22c2c, 10), linewidth=1, title='1.75')
+plot(Line15, color=color.new(#505050, 10), linewidth=1, title='1.5')
+plot(Line75, color=color.new(#ffffff, 10), linewidth=2, title='0.75')
+plot(LineMid, color=color.new(#00fc4c, 10), linewidth=1, title='0')
+plot(Line025NEG, color=color.new(#ff0000, 10), linewidth=1, title='-0.25')
+plot(Line05NEG, color=color.new(#cadd1f, 10), linewidth=2, title='-0.5')
+plot(Line7, color=color.new(#505050, 10), linewidth=1, title='-1')
+plot(Line125NEG, color=color.new(#ffffff, 10), linewidth=2, title='-1.25')
+plot(Line175NEG, color=color.new(#652fe2, 10), linewidth=1, title='-1.75')
+plot(Line8, color=color.new(#ff0000, 10), linewidth=2, title='-2')
+
+//END PLOT KELTNER CHANNELS /////////////////////////////////////////////////////////////////
+
+
+//1.125 ATR GREEN DOT//////////////////////////////////////////////////////////
+Oneatr = Line14 - Line13
+
+Open1125ATR = open + Oneatr * 1.125
+OpenOne1125ATRplot = plot(Open1125ATR, trackprice=true, color=color.new(#196319, 10), linewidth=2, style=plot.style_circles, title='OPEN + 1.125 ATR')
+//END ONE 1.125 GREEN DOT//////////////////////////////////////////////////////
+
+
+//1.1 ATR GREEN DOT//////////////////////////////////////////////////////////
+
+Open11ATR = open + Oneatr * 1.1
+Open11ATRplot = plot(Open11ATR, trackprice=true, color=color.new(#196319, 10), linewidth=2, style=plot.style_circles, title='OPEN + 1.1 ATR')
+//END 1.1 ATR GREEN DOT//////////////////////////////////////////////////////
+
+
+//1 ATR GREEN DOT//////////////////////////////////////////////////////////
+
+Open1ATR = open + Oneatr * 1
+OpenOneATRplot = plot(Open1ATR, trackprice=true, color=color.new(#196319, 10), linewidth=2, style=plot.style_circles, title='OPEN + 1 ATR')
+//END 1 ATR GREEN DOT//////////////////////////////////////////////////////
+
+
+//1.1 -75% ATR GREEN DOT//////////////////////////////////////////////////////////
+
+Open11MINUS149ATR = Open11ATR - (Open11ATR * .0149)
+Open11MINUS149ATRplot = plot(Open11MINUS149ATR, trackprice=true, color=color.new(#631919, 10), linewidth=2, style=plot.style_circles, title='OPEN + 1.1 - 1.49%')
+//END 1.1 -75% ATR GREEN DOT//////////////////////////////////////////////////////
+
+
+//1.1 -75% ATR GREEN DOT//////////////////////////////////////////////////////////
+
+Open11MINUS297ATR = Open11ATR - (Open11ATR * .0297)
+Open11MINUS297ATRplot = plot(Open11MINUS297ATR, trackprice=true, color=color.new(#631919, 10), linewidth=2, style=plot.style_circles, title='OPEN + 1.1 - 2.97%')
+//END 1.1 -75% ATR GREEN DOT//////////////////////////////////////////////////////
+
+
+//.9375  GREY DOT//////////////////////////////////////////////////////////
+
+
+OpenPoint9375 = open + Oneatr * .9375
+OpenPoint9375plot = plot(OpenPoint9375, trackprice=true, color=color.new(#616161, 10), linewidth=2, style=plot.style_circles, title='OPEN + 0.9375 ATR')
+
+//END ONE ATR GREY DOT//////////////////////////////////////////////////////
+
+
+
+//ONE ATR GREY DOT//////////////////////////////////////////////////////////
+
+
+OpenPoint875 = open + Oneatr * .875
+OpenPoint875plot = plot(OpenPoint875, trackprice=true, color=color.new(#616161, 10), linewidth=2, style=plot.style_circles, title='OPEN + 0.875 ATR')
+
+//END ONE ATR GREY DOT//////////////////////////////////////////////////////
+
+
+//BUY 2 ONWARDS (GREEN DOT) CALCS//////////////////////////////////////////////////////////
+
+//Oneatr = Line14 - Line13
+
+OpenPoint75 = open + Oneatr * .75
+OpenPoint75plot = plot(OpenPoint75, trackprice=true, color=color.new(#38a721, 10), linewidth=2, style=plot.style_circles, title='OPEN + 0.75 ATR')
+
+//END BUY 2 ONWARDS (GREEN DOT) CALCS//////////////////////////////////////////////////////
+
+
+//BUY 1 INITIAL PURCHASE (UPPER YELLOW DOT) - CAN BUY AFTER 1ST HOUR OF MARKET - CALCS//////////////////////////////////////////////////////////
+
+//Oneatr = Line14 - Line13
+
+OpenPoint625 = open + Oneatr * .625
+OpenPoint625plot = plot(OpenPoint625, trackprice=false, color=color.new(#f2ff43, 0), linewidth=2, style=plot.style_circles, title='OPEN + 0.625 ATR')
+
+//END BUY 1 INITIAL PURCHASE (UPPER YELLOW DOT) - CAN BUY AFTER 1ST HOUR OF MARKET - CALCS//////////////////////////////////////////////////////
+
+
+
+
+//BUY 1 INITIAL PURCHASE (UPPER YELLOW DOT) - CAN BUY AFTER 1ST HOUR OF MARKET - CALCS//////////////////////////////////////////////////////////
+
+//Oneatr = Line14 - Line13
+
+//////OpenPoint5625 = open + Oneatr * .5625
+//////OpenPoint5625plot = plot(OpenPoint5625, trackprice=false, color=color.new(#f2ff43, 0), linewidth=2, style=plot.style_circles, title='OPEN + 0.6875 ATR')
+
+//END BUY 1 INITIAL PURCHASE (UPPER YELLOW DOT) - CAN BUY AFTER 1ST HOUR OF MARKET - CALCS//////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+//BUY 1 INITIAL PURCHASE (LOWER YELLOW DOT) - CAN BUY AFTER 4TH HOUR OF MARKET - CALCS//////////////////////////////////////////////////////////
+
+//Oneatr = Line14 - Line13
+
+OpenPoint5 = open + Oneatr * .5
+OpenPoint5plot = plot(OpenPoint5, trackprice=false, color=color.new(#ff4343, 0), linewidth=2, style=plot.style_circles, title='OPEN + 0.5 ATR')
+
+//END BUY 1 INITIAL PURCHASE (LOWER YELLOW DOT) - CAN BUY AFTER 3RD HOUR OF MARKET - CALCS//////////////////////////////////////////////////////
+
+
+
+//BUY 1 INITIAL PURCHASE (LOWER YELLOW DOT) - CAN BUY AFTER 4TH HOUR OF MARKET - CALCS//////////////////////////////////////////////////////////
+
+//Oneatr = Line14 - Line13
+
+LowPoint75 = close + Oneatr * 1
+LowPoint75plot = plot(LowPoint75, trackprice=false, color=color.new(#c445ff, 0), linewidth=2, style=plot.style_circles, title='CLOSE + 1 ATR')
+
+//END BUY 1 INITIAL PURCHASE (LOWER YELLOW DOT) - CAN BUY AFTER 3RD HOUR OF MARKET - CALCS//////////////////////////////////////////////////////
+
+
+
+//BUY 1 INITIAL PURCHASE (LOWER YELLOW DOT) - CAN BUY AFTER 2ND HOUR OF MARKET - CALCS//////////////////////////////////////////////////////////
+
+//Oneatr = Line14 - Line13
+
+//OpenPoint375 = open + Oneatr * .375
+//OpenPoint375plot = plot(OpenPoint375, trackprice=false, color=color.new(#f2ff43, 0), linewidth=1, style=plot.style_circles, title='OPEN + 0.375 ATR')
+
+//END BUY 1 INITIAL PURCHASE (LOWER YELLOW DOT) - CAN BUY AFTER 2ND HOUR OF MARKET - CALCS//////////////////////////////////////////////////////
+
+
+
+//BUY 1 INITIAL DAY PURCHASE DAY STOP -.375 ATR BELOW OPEN (RED DOT) CALCS//////////////////////////////////////////////////////////
+
+//Oneatr = Line14 - Line13
+
+OpenNEGPoint375 = open - Oneatr * .375
+OpenNEGPoint375plot = plot(OpenNEGPoint375, trackprice=false, color=color.new(#ff4343, 0), linewidth=2, style=plot.style_circles, title='OPEN - 0.375 ATR')
+
+//END BUY 1 INITIAL DAY PURCHASE DAY STOP -.375 ATR BELOW OPEN (RED DOT) CALCS//////////////////////////////////////////////////////
+
+
+
+
+
+//ATR PATTERN BUY CALCS////////////////////////////////////////////////////////////////////////////////////
+
+//11 Conditional Buy
+pattern11 = close > close[1] and close[1] > close[2] and high - low <= Line6 - Mid and high[1] - low[1] <= Line6[1] - Mid[1] and close[0] - (Line6 - Mid) < close[2] and close[0] - (Line6 - Mid) < close[1] and close[1] - (Line6[1] - Mid[1]) < close[2] and close[0] - (Line0333 - Mid) <= close[1] and high - close >= Line05 - Mid
+plotshape(pattern11, style=shape.triangleup, size=size.tiny, color=color.new(#ff9900, 0), location=location.belowbar)
+
+//11 All Buys > = -2 ATR
+patternall11 = close[0] > close[1] and close[1] > close[2] and close[0] >= Line8
+plotchar(patternall11, char='1', color=color.new(#ffffff, 0), location=location.belowbar)
+
+//11 All Same Buys >= -2 ATR
+patternallsame11 = close[0] > close[1] and close[1] == close[2] and close[2] > close[3] and close[0] >= Line8
+plotchar(patternallsame11, char='1', color=color.new(#ffffff, 0), location=location.belowbar)
+
+//V1 Buy
+patternV1 = high - low <= Line6 - Mid and low[0] < low[1] and close[0] > close[1] and low[0] + Line025 - Mid <= low[1] and high[1] - low[1] <= Line125[1] - Mid[1]
+//and open[0] + (Line025-Mid) >= close[1] and open[0] <= close[1]
+plotshape(patternV1, style=shape.xcross, color=color.new(#ff00ff, 0), location=location.belowbar)
+
+//1.25 Buy
+pattern125 = high >= open + Line125 - Mid and open + Line125 - Mid >= Mid
+plotshape(pattern125, style=shape.diamond, color=color.new(#808080, 0), location=location.belowbar)
+
+
+
+
+
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//1.75 ATR BAR (from low to high)
+pattern175 = high >= low + Line175 - Mid
+//and low + Line175-Mid >= Mid
+plotshape(pattern175, style=shape.square, color=color.new(#808080, 0), location=location.belowbar)
+pattern175jax = high >= low + Line175 - Mid == false
+pattern175Previousjax = high[1] >= low[1] + Line175[1] - Mid[1] == false
+
+//Close Above -2 ATR
+closeAboveMinus2atr = close[0] >= Line8
+
+//Close Below .75 ATR
+closeBelow75atr = close[0] < Line75
+
+
+
+//END OF ATR PATTERN BUY CALCS//////////////////////////////////////////////////////////////////
+
+//RS CALCS////////////////////////////////////////////////////////////////////////////////////////
+
+//-----------------------------------------------------------
+// User configurable values and variable initialization 
+//-----------------------------------------------------------
+onIndexSymbol = syminfo.type == 'index'
+onFuturesSymbol = syminfo.type == 'futures'
+
+iIndex = input.symbol(title='Index', defval='AMEX:SPY')
+iOffset = input.int(title='Vertical offset of RS Line', defval=25, minval=1, maxval=1500, step=1)
+iShowDaily = input.bool(title='Daily', defval=true, inline='I10')
+iShowWeekly = input.bool(title='Weekly', defval=true, inline='I10')
+iShowMonthly = input.bool(title='Monthly', defval=true, inline='I10')
+
+iChangeColor = input.bool(title='Color Based on Direction', defval=true, inline='I1', group='RS Line Color')
+iColorUp = input.color(title='Line Up', defval=#2dff35, inline='I1', group='RS Line Color')
+iColorDown = input.color(title='Line Down', defval=#ff0000, inline='I1', group='RS Line Color')
+iColor = input.color(title='Solid Color', defval=color.new(#5778E7, transp=1), inline='I1a', group='RS Line Color')
+iWidth = input.int(title='Line width', defval=2, minval=1, maxval=5, inline='I1a', group='RS Line Color')
+
+iShowPriceNewHighDot = input.bool(title='Show price new high indicator?', defval=true, group='New High Indicators')
+iRecentHighLookback = input.int(title='Recent high look-back count', minval=10, maxval=200, defval=40, group='New High Indicators')
+iNewHighColor = input.color(title='New High Shape Color', defval=color.new(#70DA66, 44), group='New High Indicators')
+styleOption = input.string(title='New High Shape Style', options=['Circle (●)', 'Diamond (◆)', 'Square (■)', 'Triangle up (▲)', 'Triangle down (▼)', 'Arrow up (↑)', 'Arrow down (↓)', 'Label up (⬆)', 'Label down (⬇)', 'Plus (+)', 'Cross (⨯)', 'None'], defval='Circle (●)', group='New High Indicators')
+
+iShowRSLineMovingAverage = input.bool(title='', defval=false, group='Moving Average', inline='MA')
+iRSLineMovingAverageType = input.string(title='', options=['SMA', 'EMA'], defval='SMA', group='Moving Average', inline='MA')
+iRSLineMovingAverageLength = input.int(title='', defval=5, minval=5, maxval=200, group='Moving Average', inline='MA')
+iRSLineMovingAverageColor = input.color(title='', defval=#C6C8CC, group='Moving Average', inline='MA')
+
+iShowTrendLine1 = input.bool(title='', defval=false, group='Trendlines', inline='TL1')
+iTrendLineLookback1 = input.int(title='Lookback count', defval=10, minval=1, maxval=200, group='Trendlines', inline='TL1')
+iTrendLineWidth1 = input.int(title='Width', defval=1, minval=1, maxval=5, group='Trendlines', inline='TL1')
+iShowTrendLine2 = input.bool(title='', defval=false, group='Trendlines', inline='TL2')
+iTrendLineLookback2 = input.int(title='Lookback count', defval=50, minval=1, maxval=200, group='Trendlines', inline='TL2')
+iTrendLineWidth2 = input.int(title='Width', defval=1, minval=1, maxval=5, group='Trendlines', inline='TL2')
+
+var float previousRatio = 0
+var arrayOfRatios = array.new_float(0)
+var arrayOfCloses = array.new_float(0)
+
+spx = request.security(iIndex, 'D', close)
+ratio = close / spx * 100
+
+//ATTEMPTING TO PLOT SPY AS SEPERATE LINE
+//adjustedspx = (close / spx) *2000
+//plot(series=spx, color = color.red)
+
+iRecentHighLookback := math.min(iRecentHighLookback - 1, bar_index)
+
+var trendLine1 = line.new(x1=bar_index, y1=close, x2=bar_index, y2=close, color=color.green)
+var trendLine2 = line.new(x1=bar_index, y1=close, x2=bar_index, y2=close, color=color.green)
+
+displayRSData = (timeframe.isdaily and iShowDaily or timeframe.isweekly and iShowWeekly or timeframe.ismonthly and iShowMonthly) and not onIndexSymbol and not onFuturesSymbol
+
+//*************************************************************************************
+// Price and managing new highs
+//*************************************************************************************
+
+// Save for comparison of new high
+array.push(arrayOfCloses, close)
+
+//-----------------------------------------------------------
+// Get the recent close high and its index.
+//-----------------------------------------------------------
+recentCloseHigh = 0.0
+indexOfCloseHigh = 0
+if barstate.islast
+    // Loop from latest backwards...
+    for i = bar_index to bar_index - iRecentHighLookback by 1
+        if array.get(arrayOfCloses, i) > recentCloseHigh
+            recentCloseHigh := array.get(arrayOfCloses, i)
+            indexOfCloseHigh := i
+            indexOfCloseHigh
+
+//-----------------------------------------------------------
+// Close new high? 
+//-----------------------------------------------------------
+newCloseHigh = false
+if barstate.islast
+    if close == recentCloseHigh
+        newCloseHigh := true
+        newCloseHigh
+
+//if (displayRSData and newCloseHigh and iShowPriceNewHighDot)
+//    lblStyle = (styleOption == "Circle (●)") ? label.style_circle :
+//     (styleOption == "Diamond (◆)") ? label.style_diamond :
+//     (styleOption == "Square (■)") ? label.style_square :
+//     (styleOption == "Triangle up (▲)") ? label.style_triangleup :
+//     (styleOption == "Triangle down (▼)") ? label.style_triangledown :
+//     (styleOption == "Arrow up (↑)") ? label.style_arrowup :
+//     (styleOption == "Arrow down (↓)") ? label.style_arrowdown :
+//     (styleOption == "Label up (⬆)") ? label.style_labelup :
+//     (styleOption == "Label down (⬇)") ? label.style_labeldown :
+//     (styleOption == "Plus (+)") ? label.style_cross:
+//     (styleOption == "Cross (⨯)") ? label.style_xcross :
+//     (styleOption == "None") ? label.style_none :
+//         label.style_labeldown
+//    label.new(x = bar_index, y = close, color = iNewHighColor, style = lblStyle, size = size.tiny)
+
+
+//*************************************************************************************
+// RS Line, plotting and managing new high
+//*************************************************************************************
+
+//-----------------------------------------------------------
+// Plot the RS Line using the requested offset and color
+//-----------------------------------------------------------
+ratioColor = iChangeColor ? ratio > previousRatio ? iColorUp : iColorDown : iColor
+//plot(displayRSData ? ratio * iOffset : na, color = ratioColor, linewidth = iWidth, editable = false)
+
+// Save for comparison of new high
+previousRatio := ratio
+array.push(arrayOfRatios, ratio * iOffset)
+
+//-----------------------------------------------------------
+// Get the recent high ratio and its index
+//-----------------------------------------------------------
+recentRatioHigh = 0.0
+indexOfRatioHigh = 0
+if barstate.islast
+    // Loop from latest backwards...
+    for i = bar_index to bar_index - iRecentHighLookback by 1
+        if array.get(arrayOfRatios, i) > recentRatioHigh
+            recentRatioHigh := array.get(arrayOfRatios, i)
+            indexOfRatioHigh := i
+            indexOfRatioHigh
+
+//-----------------------------------------------------------
+// RS Line new high?
+//-----------------------------------------------------------
+newRatioHigh = false
+if barstate.islast
+    if ratio * iOffset == recentRatioHigh
+        newRatioHigh := true
+        newRatioHigh
+
+//if (displayRSData and newRatioHigh)
+//    lblStyle = (styleOption == "Circle (●)") ? label.style_circle :
+//     (styleOption == "Diamond (◆)") ? label.style_diamond :
+//     (styleOption == "Square (■)") ? label.style_square :
+//     (styleOption == "Triangle up (▲)") ? label.style_triangleup :
+//     (styleOption == "Triangle down (▼)") ? label.style_triangledown :
+//     (styleOption == "Arrow up (↑)") ? label.style_arrowup :
+//     (styleOption == "Arrow down (↓)") ? label.style_arrowdown :
+//     (styleOption == "Label up (⬆)") ? label.style_labelup :
+//     (styleOption == "Label down (⬇)") ? label.style_labeldown :
+//     (styleOption == "Plus (+)") ? label.style_cross:
+//     (styleOption == "Cross (⨯)") ? label.style_xcross :
+//     (styleOption == "None") ? label.style_none :
+//         label.style_labeldown
+//    label.new(x = bar_index, y = (ratio * iOffset), color = iNewHighColor, style = lblStyle, size = size.tiny)
+
+//-----------------------------------------------------------
+// Is RS Line at new high before price?
+//-----------------------------------------------------------
+//if (displayRSData and barstate.islast and newRatioHigh and not newCloseHigh)
+//    dist = time - time[1]
+//    label.new(x = time + (3 * dist), y = (ratio * iOffset), xloc = xloc.bar_time, color = #64CD57, 
+//         textcolor = #254D21, size = size.normal, style = label.style_label_left, text = "RS Line new high\nbefore price new high.\n")
+
+
+//*************************************************************************************
+// Trendlines
+//*************************************************************************************
+
+if displayRSData and barstate.islast
+    iTrendLineLookback1 := math.min(iTrendLineLookback1, bar_index)
+    iTrendLineLookback2 := math.min(iTrendLineLookback2, bar_index)
+    start = array.get(arrayOfRatios, bar_index)
+    lineColor = color.red
+
+    if iShowTrendLine1
+        end1 = array.get(arrayOfRatios, bar_index - iTrendLineLookback1)
+        if start > end1
+            lineColor := color.green
+            lineColor
+        line.set_color(trendLine1, color=lineColor)
+        line.set_width(trendLine1, width=iTrendLineWidth1)
+        line.set_xy1(trendLine1, x=bar_index, y=start)
+        line.set_xy2(trendLine1, x=bar_index[iTrendLineLookback1], y=end1)
+
+    if iShowTrendLine2
+        end2 = array.get(arrayOfRatios, bar_index - iTrendLineLookback2)
+        lineColor := color.red
+        if start > end2
+            lineColor := color.green
+            lineColor
+        line.set_color(trendLine2, color=lineColor)
+        line.set_width(trendLine2, width=iTrendLineWidth2)
+        line.set_xy1(trendLine2, x=bar_index, y=start)
+        line.set_xy2(trendLine2, x=bar_index[iTrendLineLookback2], y=end2)
+
+//*************************************************************************************
+// Moving average of the RS Line
+//*************************************************************************************
+
+movingAverage = iRSLineMovingAverageType == 'SMA' ? ta.sma(array.get(arrayOfRatios, bar_index), iRSLineMovingAverageLength) : ta.ema(array.get(arrayOfRatios, bar_index), iRSLineMovingAverageLength)
+plotMovingAverage = displayRSData and iShowRSLineMovingAverage
+//plot(plotMovingAverage ? movingAverage : na, color = iRSLineMovingAverageColor, editable = false)
+
+// 3 MONTH LOOKBACK (63 BAR) SMA HIGH AND LOW
+
+oneM_RSLineCalc = ratio * iOffset
+oneM_high_loopback = 63
+oneM_low_loopback = 63
+oneM_highest_price = ta.highest(movingAverage, oneM_high_loopback)
+oneM_lowest_price = ta.lowest(movingAverage, oneM_low_loopback)
+
+oneM_HighMinusLowMA = oneM_highest_price - oneM_lowest_price
+//plot (oneM_HighMinusLowMA)
+
+oneM_RSMinusLowMA = movingAverage - oneM_lowest_price
+//plot (oneM_RSMinusLowMA)
+
+oneM_RSCalc = oneM_RSMinusLowMA / oneM_HighMinusLowMA * .4
+//plot(oneM_RSCalc)
+
+// 6 MONTH LOOKBACK (126 BAR) SMA HIGH AND LOW
+
+sixM_RSLineCalc = ratio * iOffset
+sixM_high_loopback = 126
+sixM_low_loopback = 126
+sixM_highest_price = ta.highest(movingAverage, sixM_high_loopback)
+sixM_lowest_price = ta.lowest(movingAverage, sixM_low_loopback)
+
+sixM_HighMinusLowMA = sixM_highest_price - sixM_lowest_price
+//plot (sixM_HighMinusLowMA)
+
+sixM_RSMinusLowMA = movingAverage - sixM_lowest_price
+//plot (sixM_RSMinusLowMA)
+
+sixM_RSCalc = sixM_RSMinusLowMA / sixM_HighMinusLowMA * .2
+//plot(sixM_RSCalc)
+
+// 9 MONTH LOOKBACK (189 BAR) SMA HIGH AND LOW
+
+nineM_RSLineCalc = ratio * iOffset
+nineM_high_loopback = 189
+nineM_low_loopback = 189
+nineM_highest_price = ta.highest(movingAverage, nineM_high_loopback)
+nineM_lowest_price = ta.lowest(movingAverage, nineM_low_loopback)
+
+nineM_HighMinusLowMA = nineM_highest_price - nineM_lowest_price
+//plot (nineM_HighMinusLowMA)
+
+nineM_RSMinusLowMA = movingAverage - nineM_lowest_price
+//plot (nineM_RSMinusLowMA)
+
+nineM_RSCalc = nineM_RSMinusLowMA / nineM_HighMinusLowMA * .2
+//plot(nineM_RSCalc)
+
+// 12 MONTH LOOKBACK (252 BAR) SMA HIGH AND LOW
+
+twelveM_RSLineCalc = ratio * iOffset
+twelveM_high_loopback = 252
+twelveM_low_loopback = 252
+twelveM_highest_price = ta.highest(twelveM_RSLineCalc, twelveM_high_loopback)
+twelveM_lowest_price = ta.lowest(twelveM_RSLineCalc, twelveM_low_loopback)
+
+twelveM_HighMinusLowMA = twelveM_highest_price - twelveM_lowest_price
+//TURN BACK ON IF NEEDED
+//plot (twelveM_HighMinusLowMA)
+
+twelveM_RSMinusLowMA = movingAverage - twelveM_lowest_price
+//TURN BACK ON IF NEEDED
+//plot (twelveM_RSMinusLowMA)
+
+twelveM_RSCalc = twelveM_RSMinusLowMA / twelveM_HighMinusLowMA
+//*.2
+//TURN BACK ON IF NEEDED
+//plot(twelveM_RSCalc)
+
+TOTALRSCALC = (oneM_RSCalc + sixM_RSCalc + nineM_RSCalc + twelveM_RSCalc) * 100
+// plot (TOTALRSCALC, color=#FFFFFF)
+
+low_to_high_range = twelveM_highest_price - twelveM_lowest_price
+low_to_close_range = ratio * iOffset - twelveM_lowest_price
+
+//plot(displayRSData ? ratio * iOffset : na, color = ratioColor, linewidth = iWidth, editable = false)
+
+RSnumber = low_to_close_range / low_to_high_range * 100
+
+//-----------------------------
+//HIGH1 = twelveM_HighMinusLowMA
+//TODAY = twelveM_RSMinusLowMA
+//LOW = twelveM_RSCalc
+
+lowtohigh = twelveM_HighMinusLowMA - twelveM_RSCalc
+lowtoclose = twelveM_RSMinusLowMA - twelveM_RSCalc
+
+RSnumber2 = lowtoclose / twelveM_HighMinusLowMA * 100
+RSnumber2_str = str.tostring(RSnumber2, '#')
+RSnumber2_69 = RSnumber2 >= 68.5
+
+
+
+//RSlabel = label.new(bar_index, na, "RS Number: " + tostring(RSnumber), color=color.green, textcolor=color.black, style=label.style_label_lower_left)
+
+//RSlabel = label.new(x = time + (3), y = (ratio * iOffset), xloc = last_bar_index, color = #64CD57, textcolor = #254D21, size = size.normal, style = label.style_label_left, text = tostring(RSnumber))
+
+//RSlabel = label.new(bar_index, (ratio * iOffset),  "RS " + tostring(RSnumber2, "#"), textcolor=color.white, style = label.style_label_left)
+//label.delete(RSlabel[1])
+
+//RSnumber2round = round(RSnumber)
+//TURN BACK ON IF NEEDED - THIS IS THE RS NUMBER IN THE LABEL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//plot(RSnumber2)
+
+//tostring(volMA/1000, "#.000")
+
+// set up new xy params to labels on new bar
+//label.set_xy(RSlabel, bar_index, close)
+
+//--------------------------------------------------
+//HIGH1 = twelveM_HighMinusLowMA
+//TODAY = twelveM_RSMinusLowMA)
+//LOW = twelveM_RSCalc
+
+
+
+//--------------------------------------------------
+
+RSshow_52_week_high_low = input(title='Show 52 week highest/lowest', defval=true)
+//plot(RSshow_52_week_high_low ? twelveM_highest_price: na, title='52 Week High', trackprice=true, color=color.orange, offset=-9999)
+//plot(RSshow_52_week_high_low ? twelveM_lowest_price: na, title='52 Week Low', trackprice=true, color=color.orange, offset=-9999)
+
+
+
+
+//MINERVINI CALCS///////////////////////////////////////////////////////////////////////////////
+
+gap45 = (open[0] - close[1]) / close[1] * 100 <= -4.5 or (open[1] - close[2]) / close[2] * 100 <= -4.5 or (open[2] - close[3]) / close[3] * 100 <= -4.5 or (open[3] - close[4]) / close[4] * 100 <= -4.5 or (open[4] - close[5]) / close[5] * 100 <= -4.5 or (open[5] - close[6]) / close[6] * 100 <= -4.5 or (open[6] - close[7]) / close[7] * 100 <= -4.5 or (open[7] - close[8]) / close[8] * 100 <= -4.5 or (open[8] - close[9]) / close[9] * 100 <= -4.5 or (open[9] - close[10]) / close[10] * 100 <= -4.5 or (open[10] - close[11]) / close[11] * 100 <= -4.5 or (open[11] - close[12]) / close[12] * 100 <= -4.5 or (open[12] - close[13]) / close[13] * 100 <= -4.5 or (open[13] - close[14]) / close[14] * 100 <= -4.5 or (open[14] - close[15]) / close[15] * 100 <= -4.5 or (open[15] - close[16]) / close[16] * 100 <= -4.5 or (open[16] - close[17]) / close[17] * 100 <= -4.5 or (open[17] - close[18]) / close[18] * 100 <= -4.5 or (open[18] - close[19]) / close[19] * 100 <= -4.5 or (open[19] - close[20]) / close[20] * 100 <= -4.5
+//or (open[20] - close[21]) / close[21] * 100 <= -4.5
+//or (open[21] - close[22]) / close[22] * 100 <= -4.5
+
+//Close Below -2 ATR
+closeBelowMinus2atr = close < Line8
+
+//Close Below -2 ATR for 8 days
+closeBelowMinus2atr8days = closeBelowMinus2atr[0] or closeBelowMinus2atr[1] or closeBelowMinus2atr[2] or closeBelowMinus2atr[3] or closeBelowMinus2atr[4] or closeBelowMinus2atr[5] or closeBelowMinus2atr[6] or closeBelowMinus2atr[7]
+
+closeBelowMinus2atr8daysinverse = closeBelowMinus2atr8days == false
+
+gap45inverse = gap45 == false
+
+
+//TODAYS BAR IS 1.75 ATR & CLOSE IS 1 ATR LOWER THAN OPEN
+pattern175close1atrlowerthanopen = high >= low + Line175 - Mid and open >= close + (Line6 - Mid) and close[0] < Line75
+
+//TODAYS CLOSE IS 1.75 ATR LOWER THAN YESTERDAYS OPEN & YESTERDAYS BAR >= .75 ATR HIGH TO LOW AND YESTERDAYS OPEN >= .5 ATR OF YESTERDAYS CLOSE
+yesterdaysbarispoint75atrandlowlessthanpoint5atrfromopen = high[1] >= low[1] + (Line75 - Mid) and open[1] >= close[1] + (Line05 - Mid)
+todaysclose175atrlowerthanyesterdaysopen = open[1] >= close + (Line175 - Mid) and close[0] < Line75
+bothdayscombined = yesterdaysbarispoint75atrandlowlessthanpoint5atrfromopen and todaysclose175atrlowerthanyesterdaysopen
+
+//ALL 1.75 CONDITIONS
+all175conditions = pattern175close1atrlowerthanopen or bothdayscombined
+
+//175 CONDITION WAIT 8 DAYS
+all175conditions8days = all175conditions[0] or all175conditions[1] or all175conditions[2] or all175conditions[3] or all175conditions[4] or all175conditions[5] or all175conditions[6] or all175conditions[7]
+all175conditions8daysinverse = all175conditions8days == false
+
+
+/////////////////Ledge Detect - 20 bars
+
+//check if 8 bars ago an all175condition event occured
+check8barago175event = all175conditions[8]
+
+//average past 7 closes after 175 event (not including todays)
+average7closes = (close[1] + close[2] + close[3] + close[4] + close[5] + close[6] + close[7])/7
+
+//is average of 7 closes ABOVE open of 175 event (8 days ago)
+average7closesAbove175eventOpen = average7closes < open[8]
+
+ledgedetect = check8barago175event and average7closesAbove175eventOpen
+
+//ledge condition 20 days
+ledgecondition20days = ledgedetect[0] or ledgedetect[1] or ledgedetect[2] or ledgedetect[3] or ledgedetect[4] or ledgedetect[5] or ledgedetect[6] or ledgedetect[7] or ledgedetect[8] or ledgedetect[9] or ledgedetect[10] or ledgedetect[11] or ledgedetect[12] or ledgedetect[13] or ledgedetect[14] or ledgedetect[15] or ledgedetect[16] or ledgedetect[17] or ledgedetect[18] or ledgedetect[19]
+ledgecondition20daysinverse = ledgecondition20days == false
+
+
+//------------------------
+
+sma50 = ta.sma(close, 50)
+sma150 = ta.sma(close, 150)
+sma200 = ta.sma(close, 200)
+sma200_22 = sma200[22]
+sma200_88 = sma200[88]
+sma200_396 = sma200[396]
+
+//-----My Extra Calcs--------
+is_uptrending_at_least_18_months = if sma200 > sma200_396
+    true
+else
+    false
+//-----End of My Extra Calcs-
+
+//Close 2 ATR Above 200SMA
+close_2atr_above_200sma = close >= sma200 + ((Line6 - Mid)*2)
+
+//Close 1 ATR Above 150SMA
+close_1atr_above_150sma = close >= sma150 + (Line6 - Mid)
+
+
+
+
+
+// 1. stock price is above ma 150 and 200
+is_price_above_sma_150_and_200 = if close > sma150 and close > sma200
+    true
+else
+    false
+
+c_1 = is_price_above_sma_150_and_200 ? 1 : 0
+
+//-----------------
+// 1a. stock price is above ma 200
+is_price_above_sma_200 = if close > sma200
+    true
+else
+    false
+
+c_1a = is_price_above_sma_200 ? 1 : 0
+//-----------------
+
+
+// 2. sma 150 is above sma 200
+is_sma_150_above_sma_200 = if sma150 > sma200
+    true
+else
+    false
+
+c_2 = is_sma_150_above_sma_200 ? 1 : 0
+
+// 3. sma 200 is trending at least 1 month(22 days)
+is_trending_at_least_1_month = if sma200 > sma200_22
+    true
+else
+    false
+
+c_3 = is_trending_at_least_1_month ? 1 : 0
+
+//------------
+// 3. sma 200 is downtrending at least 1 month(22 days)
+is_downtrending_at_least_1_month = if sma200 < sma200_22
+    true
+else
+    false
+
+c_3b = is_trending_at_least_1_month ? 1 : 0
+//-------------
+
+
+
+//------------
+// 3a. sma 200 is trending at least 5 months(110 days)
+is_trending_at_least_4_months = if sma200 > sma200_88
+    true
+else
+    false
+
+c_3a = is_trending_at_least_4_months ? 1 : 0
+//------------
+
+//------------
+// 3c. sma 200 is downtrending at least 5 months(110 days)
+is_downtrending_at_least_4_months = if sma200 < sma200_88
+    true
+else
+    false
+
+c_3c = is_downtrending_at_least_4_months ? 1 : 0
+//------------
+
+
+// 4. sma 50 is above both sma 150 and 200
+is_sma_50_above_sma_150_and_200 = if sma50 > sma150 and sma50 > sma200
+    true
+else
+    false
+
+c_4 = is_sma_50_above_sma_150_and_200 ? 1 : 0
+
+// 5. current stock price is above sma 50 
+is_current_price_above_ma_50 = if close > sma50
+    true
+else
+    false
+
+c_5 = is_current_price_above_ma_50 ? 1 : 0
+
+// 6. current stock price is 25% above 52 weeks low
+// Many of the best are up 100-300% before coming out of consolidation
+high_loopback = input(260, 'High Lookback Length')
+low_loopback = input(260, 'Low Lookback Length')
+
+highest_price = ta.highest(high, high_loopback)
+lowest_price = ta.lowest(low, low_loopback)
+
+is_price_25_percent_above_52_weeks_low = if (close / lowest_price - 1) * 100 >= 25
+    true
+else
+    false
+
+c_6 = is_price_25_percent_above_52_weeks_low ? 1 : 0
+
+// Show 52 High / Low Line 
+show_52_week_high_low = input(title='Show 52 week highest/lowest', defval=true)
+plot(show_52_week_high_low ? highest_price : na, title='52 Week High', trackprice=true, color=color.new(color.orange, 0), offset=-9999)
+plot(show_52_week_high_low ? lowest_price : na, title='52 Week Low', trackprice=true, color=color.new(color.orange, 0), offset=-9999)
+
+// 7. Current Price is within 25% of 52 week high
+is_price_within_52_high = if (1 - close / highest_price) * 100 <= 25
+    true
+else
+    false
+
+c_7 = is_price_within_52_high ? 1 : 0
+
+sma66 = ta.sma(close, 66)
+
+//IS PRICE WITHIN 1 ATR OF 25% OF 52 WEEK HIGH
+
+is_price_within_1atr_of_25percent_of_52_high = (1 - close / (highest_price - Oneatr)) * 100 <= 25
+
+
+//GRANT + MARK SCRIPT v1
+//three_month_rs  = 0.4*(close/sma22)
+//six_month_rs    = 0.2*(close/(sma22[66]))
+//nine_month_rs   = 0.2*(close/(sma22[132]))
+//twelve_month_rs = 0.2*(close/(sma22[198]))
+
+//GRANT + MARK SCRIPT v2
+//three_month_rs  = 0.4*(close/sma22[22])
+//three_month_rs    = 0.4*(close/(sma66))
+//six_month_rs   = 0.2*(close/(sma66[66]))
+//nine_month_rs = 0.2*(close/(sma66[132]))
+//twelve_month_rs = 0.2*(close/(sma66[198]))
+
+//plot (sma22daysago)
+
+//GRANT + MARK SCRIPT v3
+//three_month_rs  = 0.4*(close/sma22)
+//six_month_rs    = 0.2*(sma22[66]/(sma22[132]))
+//nine_month_rs   = 0.2*(sma22[132]/(sma22[198]))
+//twelve_month_rs = 0.2*(sma22[198]/(sma22[264]))
+
+// 8. RS rating > 70
+// relative strength IBD style
+//three_month_rs  = 0.4*(close/close[13])
+//six_month_rs    = 0.2*(close/(close[26]*2))
+//nine_month_rs   = 0.2*(close/(close[39]*3))
+//twelve_month_rs = 0.2*(close/(close[52]*4))
+
+//USE THIS AS IT IS THE ORIGINAL SCRIPT VALUES
+three_month_rs = 0.4 * (close / close[13])
+six_month_rs = 0.2 * (close / (close[26] * 2))
+nine_month_rs = 0.2 * (close / (close[39] * 3))
+twelve_month_rs = 0.2 * (close / (close[52] * 4))
+
+//WEEKLY BAR TEST
+//sma13 = sma(close,13)
+//three_month_rs  = 0.4*(close/sma13[13])
+//six_month_rs    = 0.2*(close/(sma13[26]*2))
+//nine_month_rs   = 0.2*(close/(sma13[39]*3))
+//twelve_month_rs = 0.2*(close/(sma13[52]*4))
+
+//three_month_rs  = 1.6*(close/close[63])
+//six_month_rs    = 1.2*(close/(close[126]))
+//nine_month_rs   = 1.2*(close/(close[189]))
+//twelve_month_rs = 1.2*(close/(close[252]))
+
+//three_month_rs  = 1.6*(close/close[63])
+//six_month_rs    = (close/(close[126]))
+//nine_month_rs   = (close/(close[189]))
+//twelve_month_rs = (close/(close[252]))
+
+//three_month_rs  = (((close-close[63])/close[63])*1.6)
+//six_month_rs    = (((close-close[126])/close[126]))
+//nine_month_rs   = (((close-close[189])/close[189]))
+//twelve_month_rs = (((close-close[252])/close[252]))
+
+//three_month_rs  = (((close-close[63])/close[63])*1.6)
+//six_month_rs    = (((close-close[126])/close[126])*1.2)
+//nine_month_rs   = (((close-close[189])/close[189])*1.2)
+//twelve_month_rs = (((close-close[252])/close[252])*1.1)
+
+//three_month_rs  = .4*((close-close[21])/(close[21]*40))
+//six_month_rs    = .2*((close-close[63])/(close[63]*25230))
+//nine_month_rs   = .2*((close-close[126])/(close[126]*20))
+//twelve_month_rs = .2*((close-close[252])/(close[252]*10))
+
+//three_month_rs  = 0.4*(close/close[21])
+//six_month_rs    = 0.2*(close/(close[63]*2))
+//nine_month_rs   = 0.2*(close/(close[126]*3))
+//twelve_month_rs = 0.2*(close/(close[252]*4))
+
+//rs_rating = (three_month_rs + six_month_rs + nine_month_rs + twelve_month_rs) * 100
+rs_rating = (three_month_rs + six_month_rs + nine_month_rs + twelve_month_rs) * 100
+
+//plot (rs_rating, color=#FFFFFF)
+
+rs_rating_str = str.tostring(rs_rating, '#')
+//is_rs_rating_more_than_seventy = rs_rating > 70
+//is_rs_rating_more_than_seventy = rs_rating > 60
+is_rs_rating_more_than_seventy = rs_rating >= 52.5
+
+c_8 = is_rs_rating_more_than_seventy ? 1 : 0
+
+//Wide Criteria WITHOUT RS Line
+//is_meet_all_wide_criteria = is_price_above_sma_150_and_200 and is_trending_at_least_1_month and is_price_25_percent_above_52_weeks_low and is_price_within_52_high and is_sma_50_above_sma_150_and_200 and is_sma_150_above_sma_200
+
+//Wide Criteria INCLUDING RS Line
+is_meet_all_wide_criteria = is_price_above_sma_150_and_200 and is_trending_at_least_1_month and is_price_25_percent_above_52_weeks_low and is_price_within_52_high and is_sma_50_above_sma_150_and_200 and is_sma_150_above_sma_200 and is_rs_rating_more_than_seventy
+
+is_meet_all_criteria = is_price_above_sma_150_and_200 and is_trending_at_least_1_month and is_price_25_percent_above_52_weeks_low and is_price_within_52_high and is_current_price_above_ma_50 and is_sma_50_above_sma_150_and_200 and is_sma_150_above_sma_200 and is_rs_rating_more_than_seventy
+
+is_meet_all_wide_close_criteria1 = is_price_above_sma_150_and_200 and is_trending_at_least_1_month and is_price_25_percent_above_52_weeks_low and is_price_within_52_high and is_sma_50_above_sma_150_and_200
+is_meet_all_wide_close_criteria2 = is_price_above_sma_150_and_200 and is_trending_at_least_1_month and is_price_25_percent_above_52_weeks_low and is_price_within_52_high and is_sma_150_above_sma_200
+is_meet_all_wide_close_criteria3 = is_price_above_sma_150_and_200 and is_trending_at_least_1_month and is_price_25_percent_above_52_weeks_low and is_sma_50_above_sma_150_and_200 and is_sma_150_above_sma_200
+is_meet_all_wide_close_criteria4 = is_price_above_sma_150_and_200 and is_trending_at_least_1_month and is_price_within_52_high and is_sma_50_above_sma_150_and_200 and is_sma_150_above_sma_200
+is_meet_all_wide_close_criteria5 = is_price_above_sma_150_and_200 and is_price_25_percent_above_52_weeks_low and is_price_within_52_high and is_sma_50_above_sma_150_and_200 and is_sma_150_above_sma_200
+is_meet_all_wide_close_criteria6 = is_trending_at_least_1_month and is_price_25_percent_above_52_weeks_low and is_price_within_52_high and is_sma_50_above_sma_150_and_200 and is_sma_150_above_sma_200
+
+is_meet_all_wide_close_criteria = is_meet_all_wide_close_criteria1 or is_meet_all_wide_close_criteria2 or is_meet_all_wide_close_criteria3 or is_meet_all_wide_close_criteria4 or is_meet_all_wide_close_criteria5 or is_meet_all_wide_close_criteria6
+
+//count = c_1 + c_3 + c_6 + c_7 + c_4 + c_2
+count_wide_close = c_1 + c_3 + c_6 + c_7 + c_4 or c_1 + c_3 + c_6 + c_7 + c_2 or c_1 + c_3 + c_6 + c_4 + c_2 or c_1 + c_3 + c_7 + c_4 + c_2 or c_1 + c_6 + c_7 + c_4 + c_2 or c_3 + c_6 + c_7 + c_4 + c_2
+
+//count_wide = c_1 + c_3 + c_6 + c_7 + c_4 + c_2 + c_8
+count_wide = c_1 + c_2 + c_3 + c_4 + c_6 + c_7 + c_8
+
+count = c_1 + c_2 + c_3 + c_4 + c_5 + c_6 + c_7 + c_8
+
+
+//plotchar(is_meet_all_wide_criteria, char="M", size=size.auto, color=#12c812, location=location.abovebar)
+red_is_meet_all_wide_close_criteria = is_meet_all_wide_close_criteria and count_wide == 5
+yellow_is_meet_all_wide_criteria = is_meet_all_wide_criteria and count_wide == 7 and count < 8
+green_is_meet_all_wide_criteria = is_meet_all_criteria and count == 8
+
+//THE FOLLOWING 3 REM STATEMENTS WERE NOT REMMED TO ALLOW THE "M" ABOVE THE BARS
+//plotchar(red_is_meet_all_wide_close_criteria, char="M", size=size.auto, color=#ff0000, location=location.abovebar)
+//plotchar(yellow_is_meet_all_wide_criteria, char="M", size=size.auto, color=#ffff00, location=location.abovebar)
+//plotchar(green_is_meet_all_wide_criteria, char="M", size=size.auto, color=#00ff00, location=location.abovebar)
+
+//fifty_two_week_high_minus_25_percent = (1-(close/highest_price)) * 100 <= 25
+
+//PERCENT 150 IS BELOW 200
+percent150below200 = (sma150-sma200)/sma200*100
+percent150below200_str = str.tostring(percent150below200, '#.00')
+//plot (percent150below200)
+one50withinneg225percent = percent150below200 >= -2.25
+
+//150 within .5 ATR below 200SMA
+one50_within_point5ATR_below_200 = sma200 <= sma150 + (Line05 - Mid)
+
+
+
+//1.75 ATR PERCENTAGES
+//YELLOW TO 2ATR PERCENTAGE
+yellowto175atrpercent = (Line175-Line05NEG)/Line05NEG*100
+yellowto175atrpercent_str = str.tostring(yellowto175atrpercent, '#.00')
+
+//WHITE TO 2ATR PERCENTAGE
+whiteto175atrpercent = (Line175-Line125NEG)/Line125NEG*100
+whiteto175atrpercent_str = str.tostring(whiteto175atrpercent, '#.00')
+
+//PURPLE TO 2ATR PERCENTAGE
+purpleto175atrpercent = (Line175-Line175NEG)/Line175NEG*100
+purpleto175atrpercent_str = str.tostring(purpleto175atrpercent, '#.00')
+
+
+/////20 DAY AVERAGE OF YELLOW TO 1.75 ATR////////////
+yell175 = (Line175-Line05NEG)/Line05NEG*100
+twenty_av_yell175 = (yell175[0] + yell175[1] + yell175[2] + yell175[3] + yell175[4] + yell175[5] + yell175[6] + yell175[7] + yell175[8] + yell175[9] + yell175[10] + yell175[11] + yell175[12] + yell175[13] + yell175[14] + yell175[15] + yell175[16] + yell175[17] + yell175[18] + yell175[19])/20
+twenty_av_yell175_str = str.tostring(twenty_av_yell175, '#.00')
+twenty_av_yell175_greaterthan_775 = twenty_av_yell175 >= TwoPoint25percentage
+TwoPoint25percentage_str = str.tostring(TwoPoint25percentage, '#.00')
+
+//////END 20 DAY AVERAGE OF YELLOW TO 1.75 ATR /////////////
+
+
+
+
+
+//2.75 ATR PERCENTAGES
+//YELLOW TO 2ATR PERCENTAGE
+yellowto275atrpercent = (Line275-Line05NEG)/Line05NEG*100
+yellowto275atrpercent_str = str.tostring(yellowto275atrpercent, '#.00')
+//yellowto275atrpercentgreaterthan13percent = yellowto275atrpercent >= 13
+
+//WHITE TO 2ATR PERCENTAGE
+whiteto275atrpercent = (Line275-Line125NEG)/Line125NEG*100
+whiteto275atrpercent_str = str.tostring(whiteto275atrpercent, '#.00')
+//whiteto275atrpercentgreaterthan13percent = yellowto275atrpercent >= 13
+
+//PURPLE TO 2ATR PERCENTAGE
+purpleto275atrpercent = (Line275-Line175NEG)/Line175NEG*100
+purpleto275atrpercent_str = str.tostring(purpleto275atrpercent, '#.00')
+//whiteto275atrpercentgreaterthan13percent = yellowto275atrpercent >= 13
+
+//3.75 ATR PERCENTAGES
+//YELLOW TO 2ATR PERCENTAGE
+yellowto375atrpercent = (Line375-Line05NEG)/Line05NEG*100
+yellowto375atrpercent_str = str.tostring(yellowto375atrpercent, '#.00')
+//yellowto275atrpercentgreaterthan13percent = yellowto275atrpercent >= 13
+
+//WHITE TO 2ATR PERCENTAGE
+whiteto375atrpercent = (Line375-Line125NEG)/Line125NEG*100
+whiteto375atrpercent_str = str.tostring(whiteto375atrpercent, '#.00')
+//whiteto275atrpercentgreaterthan13percent = yellowto275atrpercent >= 13
+
+//PURPLE TO 2ATR PERCENTAGE
+purpleto375atrpercent = (Line375-Line175NEG)/Line175NEG*100
+purpleto375atrpercent_str = str.tostring(purpleto375atrpercent, '#.00')
+//whiteto275atrpercentgreaterthan13percent = yellowto275atrpercent >= 13
+
+
+// Safezone Price >= 7.83
+safezone = close >= 7.83
+
+// Price greater than or equal to $10
+price_greater_10 = close >= 19
+
+//Primary Base or has 200 MA
+bars_of_stock = bar_index < 200
+
+//Stock Younger than 12 years 3020 bars (or 3020SMA)
+stock_bars3020 = bar_index < 3020
+
+//Stock Qualifier
+price_greater_than_550 = close >= 5.5
+one50above200_and_stage2_wide_close = is_sma_150_above_sma_200 and count_wide >= 5
+
+//USE THIS TO INCLUDE STAGE 2 WIDE CLOSE CRITERIA (ie in an uptrending bull market)
+//stockqualifier = (price_greater_than_550 and one50above200_and_stage2_wide_close and c_3) or (price_greater_than_550 and c_3 and count >=6) or (price_greater_than_550 and bars_of_stock and c_3)
+
+//USE THIS TO REMOVE STAGE 2 WIDE CLOSE CRITERIA (ie in a bear market) *** I USED THIS ONE THE MOST *** STOPPED USING IT ON 22/12/19
+//stockqualifier = (price_greater_than_550 and one50above200_and_stage2_wide_close and c_3 and count_wide >=7) or (price_greater_than_550 and c_3 and count_wide >=7) or (price_greater_than_550 and bars_of_stock and c_3  and count_wide >=7)
+
+//NEW STOCK QUALIFIER 22/12/19
+//THIS ONE HAS CHECK FOR 150 ABOVE 200
+//stockqualifier = (is_price_above_sma_150_and_200 and is_sma_150_above_sma_200 and is_trending_at_least_1_month and is_sma_50_above_sma_150_and_200 and gap45inverse and is_price_25_percent_above_52_weeks_low and rs_rating >=53 and count_wide >=5)
+//THIS ONE IGNORES 150 ABOVE 200
+
+core_stage2_criteria = is_price_above_sma_150_and_200 and is_trending_at_least_1_month and is_sma_50_above_sma_150_and_200 and is_price_25_percent_above_52_weeks_low and one50_within_point5ATR_below_200 and is_price_within_52_high and count_wide >= 5
+core_rs_criteria = rs_rating >= 52.5 and RSnumber2 >= 68.5
+core_below_75_ATR = closeBelow75atr
+core_close_2atr_above_200_close_1atr_above_150 = close_2atr_above_200sma and close_1atr_above_150sma
+core_no_gap_greater_than_negative_45 = gap45inverse
+core_price_greater_10 = price_greater_10
+core_closeBelowMinus2atr8daysinverse = closeBelowMinus2atr8daysinverse
+core_all175conditions8daysinverse = all175conditions8daysinverse
+core_ledgecondition20daysinverse = ledgecondition20daysinverse
+
+//RS JAX GREATER THAN 80 AND IBDRS GREATER THAN 90 (ie MMRS > 60)
+//ARE BOTH RS HIGH?
+
+high_rs_rating = rs_rating >= 59 and RSnumber2 >= 79
+//and RSnumber2 < 89.5
+//and rs_rating < 67.5 
+extreme_rs_rating = rs_rating >= 67 and RSnumber2 >= 89
+high_to_extreme_rs = high_rs_rating or extreme_rs_rating
+
+//////////
+
+//DECLINE LARGER THAN -60% CALCULATIONS
+//TWO YEAR CALCS
+two_year_high_loopback = input(504, 'High Lookback Length')
+two_year_low_loopback = input(504, 'Low Lookback Length')
+two_year_highest_price = ta.highest(high, two_year_high_loopback)
+two_year_lowest_price = ta.lowest(low, two_year_low_loopback)
+
+two_year_highest_price_str = str.tostring(two_year_highest_price)
+two_year_lowest_price_str = str.tostring(two_year_lowest_price)
+
+two_year_decline_percentage = (two_year_lowest_price - two_year_highest_price)/two_year_highest_price *100
+two_year_decline_percentage_str = str.tostring(two_year_decline_percentage, '#.00')
+two_year_third_of_percentage = two_year_decline_percentage /3
+two_year_third_of_percentage_str = str.tostring(two_year_third_of_percentage, '#.00')
+
+two_year_highest_price_minus_third_percentage = two_year_highest_price + (two_year_highest_price * (two_year_third_of_percentage /100))
+two_year_highest_price_minus_third_percentage_str = str.tostring(two_year_highest_price_minus_third_percentage, '#.00')
+
+two_year_decline_percentage_greater_than_minus_60_percent = two_year_decline_percentage <= -60
+
+//ONE YEAR CALCS
+one_year_high_loopback = input(252, 'High Lookback Length')
+one_year_low_loopback = input(252, 'Low Lookback Length')
+one_year_highest_price = ta.highest(high, one_year_high_loopback)
+one_year_lowest_price = ta.lowest(low, one_year_low_loopback)
+
+one_year_highest_price_str = str.tostring(one_year_highest_price)
+one_year_lowest_price_str = str.tostring(one_year_highest_price)
+
+one_year_decline_percentage = (one_year_lowest_price - one_year_highest_price)/one_year_highest_price *100
+one_year_decline_percentage_str = str.tostring(one_year_decline_percentage, '#.00')
+one_year_third_of_percentage = one_year_decline_percentage /3
+one_year_third_of_percentage_str = str.tostring(one_year_third_of_percentage, '#.00')
+
+one_year_highest_price_minus_third_percentage = one_year_highest_price + (one_year_highest_price * (one_year_third_of_percentage /100))
+one_year_highest_price_minus_third_percentage_str = str.tostring(one_year_highest_price_minus_third_percentage, '#.00')
+
+one_year_decline_percentage_greater_than_minus_60_percent = one_year_decline_percentage <= -60
+
+//NINE MONTH CALCS
+nine_month_high_loopback = input(189, 'High Lookback Length')
+nine_month_low_loopback = input(189, 'Low Lookback Length')
+nine_month_highest_price = ta.highest(high, nine_month_high_loopback)
+nine_month_lowest_price = ta.lowest(low, nine_month_low_loopback)
+
+nine_month_highest_price_str = str.tostring(nine_month_highest_price)
+nine_month_lowest_price_str = str.tostring(nine_month_highest_price)
+
+nine_month_decline_percentage = (nine_month_lowest_price - nine_month_highest_price)/nine_month_highest_price *100
+nine_month_decline_percentage_str = str.tostring(nine_month_decline_percentage, '#.00')
+nine_month_third_of_percentage = nine_month_decline_percentage /3
+nine_month_third_of_percentage_str = str.tostring(nine_month_third_of_percentage, '#.00')
+
+nine_month_highest_price_minus_third_percentage = nine_month_highest_price + (nine_month_highest_price * (nine_month_third_of_percentage /100))
+nine_month_highest_price_minus_third_percentage_str = str.tostring(nine_month_highest_price_minus_third_percentage, '#.00')
+
+nine_month_decline_percentage_greater_than_minus_60_percent = nine_month_decline_percentage <= -60
+
+//SIX MONTH CALCS
+
+six_month_high_loopback = input(126, 'High Lookback Length')
+six_month_low_loopback = input(126, 'Low Lookback Length')
+six_month_highest_price = ta.highest(high, six_month_high_loopback)
+six_month_lowest_price = ta.lowest(low, six_month_low_loopback)
+
+six_month_highest_price_str = str.tostring(six_month_highest_price)
+six_month_lowest_price_str = str.tostring(six_month_lowest_price)
+
+six_month_decline_percentage = (six_month_lowest_price - six_month_highest_price)/six_month_highest_price *100
+six_month_decline_percentage_str = str.tostring(six_month_decline_percentage, '#.00')
+six_month_third_of_percentage = six_month_decline_percentage /3
+six_month_third_of_percentage_str = str.tostring(six_month_third_of_percentage, '#.00')
+
+six_month_highest_price_minus_third_percentage = six_month_highest_price + (six_month_highest_price * (six_month_third_of_percentage /100))
+six_month_highest_price_minus_third_percentage_str = str.tostring(six_month_highest_price_minus_third_percentage, '#.00')
+
+six_month_decline_percentage_greater_than_minus_60_percent = six_month_decline_percentage <= -60
+
+//THREE MONTH CALCS
+
+three_month_high_loopback = input(63, 'High Lookback Length')
+three_month_low_loopback = input(63, 'Low Lookback Length')
+three_month_highest_price = ta.highest(high, three_month_high_loopback)
+three_month_lowest_price = ta.lowest(low, three_month_low_loopback)
+
+three_month_highest_price_str = str.tostring(three_month_highest_price)
+three_month_lowest_price_str = str.tostring(three_month_lowest_price)
+
+//ONE MONTH CALCS
+
+one_month_high_loopback = input(21, 'High Lookback Length')
+one_month_low_loopback = input(21, 'Low Lookback Length')
+one_month_highest_price = ta.highest(high, one_month_high_loopback)
+one_month_lowest_price = ta.lowest(low, one_month_low_loopback)
+
+one_month_highest_price_str = str.tostring(one_month_highest_price)
+one_month_lowest_price_str = str.tostring(one_month_lowest_price)
+
+
+//THREE MONTH AGAINST 2 YEAR DECLINE
+three_month_highest_price_less_than_two_year_highest_price_minus_third_percentage = three_month_highest_price < two_year_highest_price_minus_third_percentage
+
+//THREE MONTH AGAINST 1 YEAR DECLINE
+three_month_highest_price_less_than_one_year_highest_price_minus_third_percentage = three_month_highest_price < one_year_highest_price_minus_third_percentage
+
+//THREE MONTH AGAINST 9 MONTH DECLINE
+three_month_highest_price_less_than_nine_month_highest_price_minus_third_percentage = three_month_highest_price < nine_month_highest_price_minus_third_percentage
+
+//THREE MONTH AGAINST 6 MONTH DECLINE
+three_month_highest_price_less_than_six_month_highest_price_minus_third_percentage = three_month_highest_price < six_month_highest_price_minus_third_percentage
+
+//ONE MONTH AGAINST ALL DECLINES
+one_month_highest_price_less_than_two_year_highest_price_minus_third_percentage = (one_month_highest_price < two_year_highest_price_minus_third_percentage) and two_year_decline_percentage_greater_than_minus_60_percent
+one_month_highest_price_less_than_one_year_highest_price_minus_third_percentage = (one_month_highest_price < one_year_highest_price_minus_third_percentage) and one_year_decline_percentage_greater_than_minus_60_percent
+one_month_highest_price_less_than_nine_month_highest_price_minus_third_percentage = (one_month_highest_price < nine_month_highest_price_minus_third_percentage) and nine_month_decline_percentage_greater_than_minus_60_percent
+one_month_highest_price_less_than_six_month_highest_price_minus_third_percentage = (one_month_highest_price < six_month_highest_price_minus_third_percentage) and six_month_decline_percentage_greater_than_minus_60_percent
+
+
+//Calculations
+decline_rule_fail = one_month_highest_price_less_than_two_year_highest_price_minus_third_percentage or one_month_highest_price_less_than_one_year_highest_price_minus_third_percentage or one_month_highest_price_less_than_nine_month_highest_price_minus_third_percentage or one_month_highest_price_less_than_six_month_highest_price_minus_third_percentage
+bars_less_than_2_years = bar_index < 504
+
+
+decline_rule_fail_inverse = decline_rule_fail == false
+core_decline_criteria = decline_rule_fail_inverse
+
+//END DECLINE LARGER THAN -60% CALCULATIONS
+
+//////////
+
+
+//THESE ARE THE SEPERATE HEALTH CHECK CORE CRITERIA (REQUIRES CHECKING EACH DAY FOR WHEN THEY ARE NOT VIOLATIONS)
+//gap45inverse and pattern175jax and closeAboveMinus2atr
+
+//STOCK QUALIFIER (+.75) "DEFAULT QUALIFIER"
+//stockqualifier = core_stage2_criteria and core_rs_criteria and core_below_75_ATR and core_close_2atr_above_200_close_1atr_above_150 and volume_core_qualifier
+core_125ATR_greater_775 = twenty_av_yell175_greaterthan_775
+//STOCK QUALIFIER (-.75) + HIGH and EXTREME RS
+stockqualifier = core_stage2_criteria and core_rs_criteria and core_close_2atr_above_200_close_1atr_above_150 and core_decline_criteria and core_125ATR_greater_775 and core_no_gap_greater_than_negative_45 and all_volume_core_qualifiers and core_price_greater_10 and core_closeBelowMinus2atr8daysinverse
+//and core_all175conditions8daysinverse and core_ledgecondition20daysinverse
+//and extreme_rs_rating and volume_core_qualifier 
+
+///// 1 atr buy
+
+//#jaxon
+pattern1atrbuy = stockqualifier and high >= (open + Oneatr * 1.1)
+plotchar(pattern1atrbuy, char ='B', size=size.tiny, color=color.new(#f2ff41, 0), location=location.belowbar)
+
+
+//// end 1 atr buy
+
+
+//gap45inverse and pattern175jax and closeAboveMinus2atr
+
+//stockqualifier = is_price_above_sma_150_and_200 and is_trending_at_least_1_month and is_sma_50_above_sma_150_and_200 and gap45inverse and is_price_25_percent_above_52_weeks_low and us_vol_greater_than_90percent_account_size and pattern175jax and one50withinneg225percent and closeAboveMinus2atr and rs_rating >= 53 and RSnumber2 >= 69 and count_wide >= 5
+
+
+
+
+//IPO Qualifier (DO NOT USE FOR NORMAL SCREENING)
+//stockqualifier = price_greater_than_550 and bars_of_stock
+//plotchar(stockqualifier, char='M', size=size.auto, color=color.new(#00ff00, 0), location=location.abovebar)
+
+plotchar(stockqualifier, char='M', size=size.tiny, color=color.new(#27a527, 0), location=location.abovebar)
+
+color_chooser = stockqualifier ? #4caf50 : #f23645
+
+//RS SCORE
+lessthan90_rs_rating = rs_rating < 52.5
+below_average_rs_rating = rs_rating >= 52.5 and rs_rating < 59
+average_rs_rating = rs_rating >= 59 and rs_rating < 63
+slightlyaboveaverage_rs_rating = rs_rating >= 63 and rs_rating < 67
+good_rs_rating = rs_rating >= 67 and rs_rating < 71
+verygood_rs_rating = rs_rating >= 71 and rs_rating < 75
+brilliant_rs_rating = rs_rating >= 75
+
+//IBD SCORE
+
+ibd_rs = if rs_rating < 52.5
+    0
+else if rs_rating >= 52.5 and rs_rating < 54
+    85.625
+else if rs_rating >= 54 and rs_rating < 55
+    86.25
+else if rs_rating >= 55 and rs_rating < 56
+    86.875
+else if rs_rating >= 56 and rs_rating < 57
+    87.5
+else if rs_rating >= 57 and rs_rating < 58
+    88.125
+else if rs_rating >= 58 and rs_rating < 59
+    88.75
+else if rs_rating >= 59 and rs_rating < 60
+    89.375
+else if rs_rating >= 60 and rs_rating < 61
+    90
+else if rs_rating >= 61 and rs_rating < 62
+    90.625
+else if rs_rating >= 62 and rs_rating < 63
+    91.25
+else if rs_rating >= 63 and rs_rating < 64
+    91.875
+else if rs_rating >= 64 and rs_rating < 65
+    92.5
+else if rs_rating >= 65 and rs_rating < 66
+    93.125
+else if rs_rating >= 66 and rs_rating < 67
+    93.75
+else if rs_rating >= 67 and rs_rating < 68
+    94.375
+else if rs_rating >= 68 and rs_rating < 69
+    95
+else if rs_rating >= 69 and rs_rating < 70
+    95.625
+else if rs_rating >= 70 and rs_rating < 71
+    96.25
+else if rs_rating >= 71 and rs_rating < 72
+    96.875
+else if rs_rating >= 72 and rs_rating < 73
+    97.5
+else if rs_rating >= 73 and rs_rating < 74
+    98.125
+else if rs_rating >= 74 and rs_rating < 75
+    98.75
+else if rs_rating >= 75
+    99
+
+//else
+//    0
+
+
+//LenWATR := if syminfo.ticker == "AAPL" 
+//    43
+//else if syminfo.ticker == "AAL"
+//    1
+//else
+//    99 // default value
+
+
+
+//else
+//    false
+//
+//c_7 = is_price_within_52_high ? 1 : 0
+
+ibd_rs_str = str.tostring(ibd_rs, '#')
+
+
+
+//RS Qualifiable
+//RSqualifiable = rs_rating >= 53 and RSnumber2 >= 68.5
+
+
+
+//THIS IS FOR FLOAT SHARES OUTSTANDING (only allows Financial Year "FY" ie so only updated every 12 months)
+//total_shares_outstanding = financial(syminfo.tickerid, "FLOAT_SHARES_OUTSTANDING", "FY")/1000000
+
+//THIS IS FOR TOTAL COMMOM SHARES OUTSTANDING (possibly more accurace as allows update upon Financial Quarter "FQ" in addition to financial year "FY")
+total_shares_outstanding = request.financial(syminfo.tickerid, 'TOTAL_SHARES_OUTSTANDING', 'FQ') / 1000000
+total_shares_outstanding_str = str.tostring(total_shares_outstanding, '#.00')
+
+total_shares_outstanding_lessthan70 = total_shares_outstanding <70
+
+market_cap = total_shares_outstanding * close / 1000
+market_cap_str = str.tostring(market_cap, '#.000')
+market_cap_1billion_or_below = market_cap <=1
+
+
+
+text_ = ''
+//text_ := text_ + "Minervini trend template" + "\n" 
+text_ += (stockqualifier ? 'STOCK PASS' : 'STOCK FAIL') + '\n'
+text_ += 'US ACCOUNT = $' + us_account_size_str + '\n'
+text_ += '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭ CORE CRITERIA ˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n'
+text_ += (core_stage2_criteria ? 'PASS:         STAGE 2' : 'FAIL:          STAGE 2') + '\n'
+
+text_ += '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n'
+text_ += (core_rs_criteria ? 'PASS:         RS NUMBER CRITERIA     '           +      (high_rs_rating ? '                        HIGH RS (JaxRS>=79 MMRS>=59)' + '\n' : ' ')   +      (extreme_rs_rating ? '                                                                       EXTREME RS (JaxRS>=89 MMRS>=67)' : ' ')  +           '\n' +                            '                                                                                                   JAXRS >= 69' + ' (' + RSnumber2_str + ')' : 'FAIL:         RS NUMBER CRITERIA     ' + '                                               JAXRS >= 69' + ' (' + RSnumber2_str + ')') + '\n'
+//text_ += (core_rs_criteria ? 'PASS:         RS NUMBER CRITERIA     '           +      (high_rs_rating ? '                           HIGH RS (JaxRS>80 MMRS>60)' : ' ')   +      (extreme_rs_rating ? '                    EXTREME RS (JaxRS>90 MMRS>68)' : ' ')  +           '\n' +                            '                                                                                                   JAXRS >= 69' + ' (' + RSnumber2_str + ')' : 'FAIL:         RS NUMBER CRITERIA     ' + '                                               JAXRS >= 69' + ' (' + RSnumber2_str + ')') + '\n'
+
+
+text_ += '                                                                                                    MMRS >= 53' + ' (' + rs_rating_str + ')'  + '\n'
+text_ += '                                                                                                    IBDRS = ' + ibd_rs_str + '\n'
+//text_ += (high_rs_rating ? 'VERY HIGH RS (JaxRS>80 MMRS>60)' : ' ') + '\n'
+
+//text_ += (bars_of_stock ? '' : '              (RS53-RS58=IBD86-IBD89 RS60=IBD90 RS63=IBD92 RS68=IBD95 RS75=IBD99)' + '\n')
+text_ += '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n'
+//text_ += (bars_of_stock ? '' : (us_vol_greater_than_90percent_account_size ? 'PASS:         VOLUME CRITERIA     ' : 'FAIL:         VOLUME CRITERIA     ') + '\n')
+//text_ += (all_volume_core_qualifiers ? 'PASS:         MIN VOL' : 'FAIL:         MIN VOL') + '\n'
+text_ += (all_volume_core_qualifiers ? 'PASS:         ' + voldescription : 'FAIL:         ' + voldescription ) + '\n'
+//text_ += '                                                            MAXIMUM US POSITION ALLOWED = $' + volUSposition_str + '\n'
+text_ += '$'  + volUSposition_str + '  =  MAX US POSITION ALLOWED' + '\n'
+text_ += '' + '\n'
+text_ += (volume_core_qualifier_100 ? 'PASS:         $' + us_account_size_str + '         TRADE TO 100% OF ACC' : 'FAIL:          TRADE TO 100% OF ACC') + '\n'
+text_ += (volume_core_qualifier_75 ? 'PASS:         $' + us_account_size_75_str + '         TRADE TO 75% OF ACC' : 'FAIL:          TRADE TO 75% OF ACC') + '\n'
+text_ += (volume_core_qualifier_50 ? 'PASS:         $' + us_account_size_50_str + '         TRADE TO 50% OF ACC   *MINIMUM*' : 'FAIL:          TRADE TO 50% OF ACC   *MINIMUM*') + '\n'
+text_ += (volume_core_qualifier_25 ? 'PASS:         $' + us_account_size_25_str + '         TRADE TO 25% OF ACC (LEVEL 0)    ' : 'FAIL:          TRADE TO 25% OF ACC (LEVEL 0)    ') + '\n'
+text_ += (volume_core_qualifier_12p5 ? 'PASS:         $' + us_account_size_12p5_str + '         TRADE TO 12.5% OF ACC (LEVEL 1)    ' : 'FAIL:          TRADE TO 12.5% OF ACC (LEVEL 1)    ') + '\n'
+text_ += (volume_core_qualifier_6p25 ? 'PASS:         $' + us_account_size_6p25_str + '         TRADE TO 6.25% OF ACC (LEVEL 2)    ' : 'FAIL:          TRADE TO 6.25% OF ACC (LEVEL 2)    ') + '\n'
+//text_ += '                                                            MAXIMUM US POSITION ALLOWED = $' + volUSposition_str + '\n'
+
+
+//text_ += '                            MINIMUM 30MA VOLUME ALLOWED (UP TO 50% OF ACC) = ' + volume_allowed_to_trade_str + '\n'
+//text_ += '                                     MINIMUM VOLUME ALLOWED (UP TO 50% OF ACC) = ' + volume_allowed_to_trade_minus_20_percent_str + '\n'
+//text_ += '                                     VOL (30MA) = ' + volMA_str + '\n'
+//text_ += '                                     Volume = ' + volume_str + '\n'
+
+
+
+
+
+//text_ += '                                                                                          ' + volMA_str + ' = 30 MA VOL ' + '\n'
+//text_ += '                                                                                          ' + volume_str + ' = last days volume ' + '\n'
+
+text_ += '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n'
+text_ += (closeBelow75atr ? 'PASS:          .75 ATR CRITERIA     ' : 'FAIL:          .75 ATR CRITERIA     ') + '\n'
+text_ += '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n'
+text_ += (core_close_2atr_above_200_close_1atr_above_150 ? 'PASS:          CLOSE 2 ATR ABOVE 200SMA AND CLOSE 1 ATR ABOVE 150SMA     ' : 'FAIL:          CLOSE 2 ATR ABOVE 200SMA AND CLOSE 1 ATR ABOVE 150SMA     ') + '\n'
+text_ += '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n'
+text_ += (decline_rule_fail ? 'FAIL:          DECLINE LESS THAN -60% (OR SHOWN EXTREME STRENGTH (2/3)' : 'PASS:          DECLINE LESS THAN -60% (OR SHOWN EXTREME STRENGTH (2/3)') + '\n'
+text_ += (bars_less_than_2_years ? '***WARNING CANNOT CALCULATE*** MANUAL CHECK REQUIRED' : ' ') + '\n'
+//text_ += '\n'
+
+text_ += '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n'
+text_ += (gap45 ? 'FAIL:          NO GREATER THAN -4.5% GAP IN PAST 22 DAYS' : 'PASS:          NO GREATER THAN -4.5% GAP IN PAST 22 DAYS') + '\n'
+text_ += '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n'
+
+
+text_ += (closeBelowMinus2atr8daysinverse ? 'PASS:          CLOSE BELOW -2 ATR IN PAST 8 DAYS' : 'FAIL:          CLOSE BELOW -2 ATR IN PAST 8 DAYS') + '\n'
+text_ += '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n'
+
+//text_ += (all175conditions8daysinverse ? 'PASS:          1.75 BARS WITH LOWER CLOSE IN PAST 8 DAYS' : 'FAIL:          1.75 BARS WITH LOWER CLOSE IN PAST 8 DAYS') + '\n'
+//text_ += '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n'
+
+//text_ += (ledgecondition20daysinverse ? 'PASS:          LEDGE CONDITION IN PAST 20 DAYS' : 'FAIL:          LEDGE CONDITION IN PAST 20 DAYS') + '\n'
+//text_ += '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n'
+
+text_ += (price_greater_10 ? 'PASS:          PRICE >= $19.00' : 'FAIL:          PRICE >= $19.00') + '\n'
+
+text_ += '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n'
+text_ += (twenty_av_yell175_greaterthan_775 ? 'PASS:          2.25 ATR >= ' + TwoPoint25percentage_str + '%                                                    2.25 ATR = ' + '(' + twenty_av_yell175_str + '%)' : 'FAIL:          2.25 ATR >= ' + TwoPoint25percentage_str + '%                                                    2.25 ATR = ' + '(' + twenty_av_yell175_str + '%)') + '\n'
+
+
+//text_ += (bars_of_stock ? '' : (close_2atr_above_200sma ? 'CLOSE IS 2 ATRS ABOVE 200SMA' : 'CLOSE IS BELOW 2 ATRS OF 200SMA ') + '\n')
+//text_ += (bars_of_stock ? '' : (close_1atr_above_150sma ? 'CLOSE IS 1 ATR ABOVE 150SMA' : 'CLOSE IS BELOW 1 ATR OF 150SMA ') + '\n')
+
+//text_ += (one50_within_point5ATR_below_200 ? 'PASS:          150SMA WITHIN .5 ATR BELOW 200SMA     ' : 'FAIL:          150SMA WITHIN .5 ATR BELOW 200SMA     ') + '\n'
+
+text_ += '\n'
+//text_ += '**ALL CORE CRITERIA MUST PASS**' + '\n'
+text_ += '*********************' + '\n'
+//text_ += '************************ BEFORE CONTINUING WITH HEALTH CHECKS ***********************' + '\n'
+
+text_ += '1. CHECK > -30% DECLINE (WAIT FOR SMALLER PULLBACK)' + '\n'
+text_ += '2. CHECK 6 BARS BELOW .75 ATR (UPPER WHITE LINE)' + '\n'
+text_ += '3. CHECK 8 BARS BELOW -1.25 ATR (LOWER WHITE LINE)' + '\n'
+text_ += '4. CHECK 8 BARS BELOW -2 ATR (LOWEST RED LINE)' + '\n'
+text_ += '5. AFTER 8 BARS BELOW -2 ATR, IF CLOSE ABOVE -1.25 ATR' + '\n'
+text_ += '    AND CLOSES BELOW -2 ATR AGAIN (ANOTHER 8 BARS)' + '\n'
+text_ += '6. AFTER 8 BARS BELOW -1.25 ATR, IF CLOSE ABOVE -0.5 ATR' + '\n'
+text_ += '    AND CLOSES BELOW -1.25 ATR AGAIN (ANOTHER 8 BARS)' + '\n'
+
+//text_ += (RSqualifiable ? 'YES -         RS NUMBERS QUALIFY:     ' : ' NO - RS NUMBERS DONT QUALIFY:     ') 
+//text_ += (RSnumber2_69 ? 'JaxRS >= 69' + ' (' + RSnumber2_str + ')' : 'JaxRS < 69' + ' (' + RSnumber2_str + ')') + (lessthan90_rs_rating ? '     |     MMRS < 53' + ' (' + rs_rating_str + ')' : '     |     MMRS >= 53' + ' (' + rs_rating_str + ')' ) + '\n'
+
+//text_ += (lessthan90_rs_rating ? '                                        IBD RS:                     <86          |     NO TRADE' : '') + (below_average_rs_rating ? '                                       IBD RS:                      86 to 90     |     BELOW AVERAGE' : '') + (average_rs_rating ? '                                        IBD RS:                     90 to 92     |     AVERAGE' : '') + (slightlyaboveaverage_rs_rating ? '                                       IBD RS:                      92 to 94     |     ABOVE AVERAGE' : '') + (good_rs_rating ? '                                        IBD RS:                     94 to 96     |     GOOD' : '') + (verygood_rs_rating ? '                                       IBD RS:                      96 to 98     |     VERY GOOD' : '') + (brilliant_rs_rating ? '                                        IBD RS:                     99+    |     BRILLIANT' : '') + '\n'
+//text_ += (bars_of_stock ? '' : (is_rs_rating_more_than_seventy ? 'YES - 8. RS Rating >= 53? ' + '(' + rs_rating_str + ')' : ' NO - 8. RS Rating > 59? ' + '(' + rs_rating_str + ')') + '\n')
+//text_ += (bars_of_stock ? '' : '              (RS53-RS58=IBD86-IBD89 RS60=IBD90 RS63=IBD92 RS68=IBD95 RS75=IBD99)' + '\n')
+
+
+//text_ += (vol_less_than_100k or volMA_lessthan_200k ? ' NO - VOLUME:    LIQUIDITY ISSUE                     '  + '(Vol ' + str.tostring(volume / 1000) + 'K' + ' / MA ' + str.tostring(volMA / 1000, '#.000') + 'K)' : 'YES -         VOLUME:    LIQUID                                     '  + '(Vol ' + str.tostring(volume / 1000) + 'K' + ' / MA ' + str.tostring(volMA / 1000, '#.000') + 'K)') + '\n'
+
+//REMMED OUT 271222 BELOW WAS ACTIVE (I REMMED OUT WITH 3 /// INFRONT)
+///text_ += (bars_of_stock ? '' : (us_vol_greater_than_90percent_account_size ? 'YES -         90% OF ACCOUNT CAN BE TRADED WITH STOCKS VOLUME' : ' NO -         WARNING!!! VOLUME IS NOT SUITABLE FOR LARGE POSITION') + '\n')
+///text_ += '\n'
+//text_ += ninety_percent_account_size_str
+
+///text_ += '90%  US ACCOUNT = $' + ninety_percent_account_size_str + '\n'
+
+
+///text_ += 'US MAX POSITION  = $' + volUSposition_str + '\n'
+///text_ += '\n'
+///text_ += '                                                                                   US ACCOUNT SIZE = $' + us_account_size_str + '\n'
+//text_ += '$' + volUSposition_str + ' = US MAX POS' + '\n'
+//text_ += '$' + volAUposition_str + ' = AU MAX POS' + '\n'
+
+///text_ += '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n'
+///END REMMED OUT
+text_ += '\n'
+text_ += '**HEALTH CHECKS**' + '\n'
+
+text_ += (closeAboveMinus2atr ? 'PASS:         CLOSE >= -2 ATR' : 'FAIL:        CLOSE >= -2 ATR') + '\n'
+//text_ += '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n'
+text_ += (pattern175Previousjax ? 'PASS:         PREVIOUS BAR < 1.75 ATR' : 'FAIL:         PREVIOUS BAR < 1.75 ATR') + '\n'
+text_ += (pattern175jax ? 'PASS:         BAR UNDER 1.75 ATR' : 'FAIL:         BAR UNDER 1.75 ATR') + '\n'
+
+
+
+
+//text_ += '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n'
+//text_ += (gap45 ? 'FAIL:        NO GREATER THAN -4.5% GAP IN PAST 22 DAYS' : 'PASS:         NO GREATER THAN -4.5% GAP IN PAST 22 DAYS') + '\n'
+
+
+//text_ := text_ + "˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭2x YES" + "\n"
+//text_ := text_ + (bars_of_stock ? "" : ((is_sma_150_above_sma_200 ? "YES - " : " NO - ") + "MA 150 is above MA 200? " + "\n"))
+//text_ := text_ + (bars_of_stock ? "" : ((is_meet_all_wide_close_criteria ? "YES - " : " NO - ") + "Stage 2 Wide Close?" + " (" + tostring(count_wide, "0") + " of 5) " + "\n"))
+//text_ := text_ + (bars_of_stock ? "" : ("˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭1x YES" + "\n"))
+//text_ := text_ + (bars_of_stock ? "" : ((count >=6? "YES - " : " NO - ") + "Stage 2 Full >= 6?" + " (" + tostring(count, "0") + " of 8) " + "\n"))
+//text_ := text_ + (bars_of_stock ? "" : ("˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭" + "\n"))
+
+//text_ += '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n'
+//text_ += (bars_of_stock ? 'PRIMARY BASE (NO 200SMA' : 'STOCK HAS 200SMA') + '\n'
+//text_ += '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n'
+
+//REMMED OUT 271222 BELOW WAS ACTIVE
+//text_ += (bars_of_stock ? '' : '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n')
+//text_ += (bars_of_stock ? '' : (is_meet_all_wide_close_criteria ? 'YES - ' : ' NO - ') + 'Stage 2 Wide Close?' + ' (' + str.tostring(count_wide, '0') + ' of 5) ' + '\n')
+//text_ += (bars_of_stock ? '' : (is_meet_all_wide_criteria ? 'YES - ' : ' NO - ') + 'Stage 2 Wide?' + ' (' + str.tostring(count_wide, '0') + ' of 7) ' + '\n')
+//text_ += (bars_of_stock ? '' : (is_meet_all_criteria ? 'YES - ' : ' NO - ') + 'Stage 2 Full?' + ' (' + str.tostring(count, '0') + ' of 8) ' + '\n')
+//text_ += (bars_of_stock ? '' : '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n')
+///END REMMED OUT
+//text_ += ' ' + '\n'
+//text_ += '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n'
+//text_ += '\n'
+text_ += '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭INFORMATIONAL˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n'
+text_ += (market_cap_1billion_or_below ? 'PASS:         MARKET CAP < 1B' : 'FAIL:         MARKET CAP < 1B') + '                                                   Market Cap = ' + market_cap_str + 'B' + '\n'
+
+text_ += (total_shares_outstanding_lessthan70 ? 'PASS:         SHARES OUTSTANDING < 70M' : 'FAIL:         SHARES OUTSTANDING < 70M') + '                     Shares Outstanding = ' + total_shares_outstanding_str + 'M' + '\n'
+
+text_ += (bars_of_stock ? '' : (is_price_within_52_high ? 'PASS:' : 'FAIL:') + '         PRICE 25% OF 52 WK HIGH?' + '\n')
+
+text_ += (stock_bars3020 ? 'PASS:          STOCK <12 YRS' : 'FAIL:          STOCK <12 YRS') + '\n'
+
+text_ += (bars_of_stock ? '' : (is_current_price_above_ma_50 ? 'PASS:' : 'FAIL:') + '         PRICE ABOVE 50' ) + '\n'
+
+text_ += (bars_of_stock ? '' : (safezone ? 'PASS:' : 'FAIL:') + '         PRICE SAFE ZONE' )
+//+ '\n'
+
+//text_ += (bars_of_stock ? '' : (is_price_within_1atr_of_25percent_of_52_high ? 'PASS:' : 'FAIL:') + '         IS PRICE WITHIN 1 ATR OF 25% OF 52WK HIGH?' ) + '\n'
+
+
+
+
+//text_ += (safezone ? 'PRICE SAFE ZONE' : 'PRICE DANGER ZONE') + '\n'
+
+//text_ += '         Shares Outstanding = ' + total_shares_outstanding_str + 'M' + '\n'
+
+//'\n'
+//////text_ += '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n'
+//text_ += '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n'
+
+
+
+//////text_ += '1.75 ATR %:     ' 
+//////text_ += '    PURPLE = ' + '(' + purpleto175atrpercent_str + '%)'
+//////text_ += '       WHITE = ' + '(' + whiteto175atrpercent_str + '%)'
+//////text_ += '       YELLOW = ' + '(' + yellowto175atrpercent_str + '%)'  + '\n'
+
+
+
+//////text_ += '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n'
+//////text_ += '2.75 ATR %:     ' 
+//text_ += (bars_of_stock ? '' : (yellowto275atrpercentgreaterthan13percent ? 'YELLOW TO 2.75 GREATER THAN 13%  ' + '(' + yellowto275atrpercent_str + '%)' : ' YELLOW TO 2.75 LESS THAN 13% ' + '(' + yellowto275atrpercent_str + '%)' ) + '\n')
+//////text_ += '    PURPLE = ' + '(' + purpleto275atrpercent_str + '%)'
+//////text_ += '       WHITE = ' + '(' + whiteto275atrpercent_str + '%)'
+//////text_ += '       YELLOW = ' + '(' + yellowto275atrpercent_str + '%)'  + '\n'
+
+
+//////text_ += '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n'
+//////text_ += '3.75 ATR %:     '
+//text_ += (bars_of_stock ? '' : (yellowto275atrpercentgreaterthan13percent ? 'YELLOW TO 2.75 GREATER THAN 13%  ' + '(' + yellowto275atrpercent_str + '%)' : ' YELLOW TO 2.75 LESS THAN 13% ' + '(' + yellowto275atrpercent_str + '%)' ) + '\n')
+//////text_ += '    PURPLE = ' + '(' + purpleto375atrpercent_str + '%)'
+//////text_ += '       WHITE = ' + '(' + whiteto375atrpercent_str + '%)'
+//////text_ += '       YELLOW = ' + '(' + yellowto375atrpercent_str + '%)' + '\n'
+
+//text_ += '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n'
+//text_ += 'GREEN (.75): 2 MNS | HOLD LVL FOR 20 MINS OR 1ATR BUY' + '\n'
+//text_ += 'YELLOW (0.625): 4 HRS | HOLD LVL FOR 20 MINS OR .75ATR BUY' + '\n'
+//text_ += 'GREEN (.75): 6.5 HRS | MUST HOLD ABOVE 0.625 | BUY END OF DAY OR .75 BUY'
+
+//+ '\n'
+
+//text_ += '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n'
+//text_ += (safezone ? 'PRICE SAFE ZONE' : 'PRICE DANGER ZONE') + '\n'
+
+//REMMED OUT 271222 BELOW WAS ACTIVE (I REMMED OUT WITH 3 /// INFRONT)
+///text_ += '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n'
+///text_ += (one50withinneg225percent ? '150SMA WITHIN -2% OF 200SMA ' + '(' + percent150below200_str + '%)' : 'WARNING!!! 150 TOO LOW!' + '(' + percent150below200_str + '%)' ) + '\n'
+///text_ += (bars_of_stock ? '' : (is_sma_150_above_sma_200 ? '150 IS ABOVE 200' : 'CHECK THAT 150 IS WITHIN 2% OF 200') + '\n')
+///END REMMED OUT
+
+
+
+
+
+
+//text_ += '         Shares Outstanding = ' + total_shares_outstanding_str + 'M' + '\n'
+//text_ += '         Market Cap = ' + market_cap_str + 'B' + '\n'
+//text_ += '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n'
+//text_ += (stock_bars3020 ? 'YES - Stock <12 Yrs?' : ' NO - Stock >12 Yrs?') + '\n'
+
+
+//text_ += (bars_of_stock ? '' : (is_current_price_above_ma_50 ? '       YES -' : '        NO -') + ' Price above 50? ' ) + '\n'
+//text_ += (bars_of_stock ? '' : (is_price_within_52_high ? '          YES -' : '           NO -') + ' Price 25% of 52 wk high?' + '\n')
+//text_ += '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' 
+//+ '\n'
+//REMMED OUT 271222 BELOW WAS ACTIVE
+//text_ += (bars_of_stock ? '' : '\n')
+//text_ += (bars_of_stock ? '' : '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n')
+//text_ += (bars_of_stock ? '' : (is_price_above_sma_150_and_200 ? 'YES -' : ' NO -') + ' 1. Price above 150 and 200?' + '\n')
+//text_ += (bars_of_stock ? '' : (is_sma_150_above_sma_200 ? 'YES -' : ' NO -') + ' 2. 150 above 200?' + '\n')
+//text_ += (bars_of_stock ? '' : (is_trending_at_least_1_month ? 'YES -' : ' NO -') + ' 3. 200 uptrending >= 1 month?' + '\n')
+//text_ += (bars_of_stock ? '' : (is_sma_50_above_sma_150_and_200 ? 'YES -' : ' NO -') + ' 4. 50 above 150 and 200?' + '\n')
+//text_ += (bars_of_stock ? '' : (is_price_25_percent_above_52_weeks_low ? 'YES -' : ' NO -') + ' 6. Price 25% above 52 wk low?' + '\n')
+//text_ += (bars_of_stock ? '' : (is_price_within_52_high ? 'YES -' : ' NO -') + ' 7. Price within 25% of 52 wk high?' + '\n')
+//text_ += (bars_of_stock ? '' : '\n')
+//text_ += (bars_of_stock ? '' : (is_current_price_above_ma_50 ? 'YES -' : ' NO -') + ' 5. Price above 50? ' + '\n')
+//text_ += (bars_of_stock ? '' : '˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭˭' + '\n')
+///END REMMED OUT
+//text_ := text_ + "Stage 2 Trend Criteria? " + (is_meet_all_criteria ? "yes" : "no") + " (" + tostring(count, "0") + " of 8)" + "\n"
+//text_ := text_ + "Stage 2 Wide Criteria? " + (is_meet_all_wide_criteria ? "yes" : "no") + " (" + tostring(count, "0") + " of 6)" + "\n"
+//text_ := text_ + "1a. Stock price is above MA 200 ? " + (is_price_above_sma_200 ? "yes" : "no") +"\n"
+//text_ := text_ + "3. MA 200 is trending at least 1 month(22 days) ? " + (is_trending_at_least_1_month ? "yes" : "no") + "\n"
+//text_ := text_ + "3a. MA 200 is trending at least 5 months(110 days) ? " + (is_trending_at_least_5_months ? "yes" : "no") + "\n"
+//text_ := text_ + "\n"
+//REMMED OUT 271222 BELOW WAS ACTIVE
+//text_ += (bars_of_stock ? '' : (is_price_above_sma_200 ? '1. PRICE ABOVE 200' : '1.') + '\n')
+//text_ += (bars_of_stock ? '' : (is_trending_at_least_1_month ? '2. 200 EARLY UPTREND (1-4 months)' : '2.') + '\n')
+//text_ += (bars_of_stock ? '' : (is_trending_at_least_4_months ? '3. 200 CONFIRMED UPTREND (4+ months)' : '3.') + '\n')
+//text_ += (bars_of_stock ? '' : (is_price_above_sma_200 ? '4.' : '4. PRICE BELOW 200') + '\n')
+//text_ += (bars_of_stock ? '' : (is_downtrending_at_least_1_month ? '5. 200 EARLY DOWNTREND (1-4 months)' : '5.') + '\n')
+//text_ += (bars_of_stock ? '' : (is_downtrending_at_least_4_months ? '6. 200 CONFIRMED DOWNTREND (4+ months)' : '6.') + '\n')
+
+//text_ += (bars_of_stock ? '' : is_uptrending_at_least_18_months ? 'LATE STAGE TREND (18+ months)' : '')
+///END REMMED OUT
+bars_right = input(5, 'x bars right')
+position = input(close, 'Label position')
+one_color = input(false, 'Label only in one color')
+lab_color = input(#ffd700, 'Label color')
+
+//PLOT RS NUMBER
+//plot(rs_rating, color=#1579ff, linewidth=1, title="RS NUMBER")
+
+t = timenow + math.round(ta.change(time) * bars_right)
+//var label lab = na, label.delete(lab), lab := label.new(t, position, text = text_, style=label.style_label_left, yloc=yloc.price, xloc=xloc.bar_time, textalign=text.align_left, color=#ffd700, textcolor=color.black )
+var label lab = na
+label.delete(lab)
+lab := label.new(t, position, text=text_, style=label.style_label_left, yloc=yloc.price, xloc=xloc.bar_time, textalign=text.align_left, color=color_chooser, textcolor=color.black)
+
+
+//END OF MINERVINI CALCS///////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// **** Is -0.25 ATR greater than -1.50% CALCS ****
+Neg225ATR = Mid - 2.25 * ATR
+Neg25ATR = Mid - 2.5 * ATR
+//Key 1/4 ATR BETWEEN -2.5 & -2.25 ATR
+p25_atr_greater_than_15 = (Neg25ATR / Neg225ATR - 1) * 100 <= -1.5
+plotshape(p25_atr_greater_than_15, size.huge, style=shape.flag, color=color.new(#ff0000, 0), location=location.abovebar)
+
+
+//SMA200 trending down at more than 1 month (22 days) or more
+//meanunder200SMA = LineMid < sma200
+priceunder200SMA = close < sma200
+is_200trending_22days_ormore_down = sma200 < sma200_22
+
+//if 200SMA is 22bars downtrend + price<200SMA then plot ALL TRIGGER HALT
+alltriggerhalt = is_200trending_22days_ormore_down and priceunder200SMA
+plotshape(alltriggerhalt, style=shape.triangledown, color=color.new(#da00ff, 0), location=location.abovebar)
+
+//-------------Pivot-------------
+
+len50 = input.int(50, minval=1, title='Length')
+src = input(close, title='Source')
+offset = input.int(title='Offset', defval=0, minval=-500, maxval=500)
+out50 = ta.sma(src, len50)
+//plot(out50, color=color.blue, title="MA", offset=offset)
+
+len200 = input.int(200, minval=1, title='Length')
+out200 = ta.sma(src, len200)
+//plot(out200, color=color.red, title="MA", offset=offset)
+
+len150 = input.int(150, minval=1, title='Length')
+out150 = ta.sma(src, len150)
+//plot(out150, color=color.green, title="MA", offset=offset)
+
+slow = input.int(50, minval=1, title='TREND')  // 10 days a
+signal_length = input.int(title='Signal Smoothing', minval=1, maxval=500, defval=10)
+
+// Calculations
+slowline = ta.sma(volume, slow)
+trend = ta.sma(slowline, signal_length)
+
+tema(s, p) =>
+    3 * ta.ema(s, p) - 3 * ta.ema(ta.ema(s, p), p) + ta.ema(ta.ema(ta.ema(s, p), p), p)
+ma(t, s, p) =>
+    ema_1 = ta.ema(s, p)
+    rma_1 = ta.rma(s, p)
+    vwma_1 = ta.vwma(s, p)
+    wma_1 = ta.wma(s, p)
+    tema_1 = tema(s, p)
+    sma_1 = ta.sma(s, p)
+    t == 'ema' ? ema_1 : t == 'rma' ? rma_1 : t == 'vwma' ? vwma_1 : t == 'wma' ? wma_1 : t == 'tema' ? tema_1 : sma_1
+off(s, o) =>
+    offset_1 = s[o == 0 ? 1 : o]
+    o > 0 ? offset_1 : s
+mat11 = input.string(defval='ema', options=['ema', 'sma', 'rma', 'vwma', 'wma', 'tema'], title='Moving Average 1 Type')
+len11 = input.int(10, minval=1, title='Moving Average 1 Length')
+src11 = input(close, title='Moving Average 1 Source')
+off11 = input.int(0, minval=0, title='Moving Average 1 Offset')
+mat22 = input.string(defval='ema', options=['ema', 'sma', 'rma', 'vwma', 'wma', 'tema'], title='Moving Average 2 Type')
+len22 = input.int(20, minval=1, title='Moving Average 2 Length')
+src22 = input(close, title='Moving Average 2 Source')
+off22 = input.int(0, minval=0, title='Moving Average 2 Offset')
+
+out11 = ma(mat11, off(src11, off11), len11)
+out22 = ma(mat22, off(src22, off22), len22)
+
+//plot(out11, color=#1155CC, transp=0, title="MA 1")
+//plot(out22, color=#FF0000, transp=50, linewidth=2, title="MA 2")
+
+//trade to hold trend indicator//
+bullishtrenddef = close > out50 and out50 > out150 and out150 > out200 and out200 > out200[1] and out200 > out200[20] and out50 >= out50[1]
+
+//pivot
+
+atr_length = input(defval=3, title='ATR Length')
+lookback = input(defval=150, title='Look Back Period')
+closerange = input(defval=4, title='Close range')
+percentile1 = input(defval=30, title='Smaller Percentile')
+percentile2 = input(defval=40, title='Largerer Percentile')
+
+//range2
+atr_value1 = 0.0
+stan1 = 0.0
+range1 = 0.0
+l1 = 0.0
+h1 = 0.0
+for i = 1 to atr_length by 1
+    h1 := ta.highest(high, atr_length)
+    l1 := ta.lowest(low, atr_length)
+    range1 := h1 - l1
+    range1
+atrp1 = range1 / h1 * 100
+//range2
+atr_value2 = 0.0
+stan2 = 0.0
+range2 = 0.0
+l2 = 0.0
+h2 = 0.0
+for i = 1 to atr_length by 1
+    h2 := ta.highest(close, atr_length)
+    l2 := ta.lowest(close, atr_length)
+    range2 := h2 - l2
+    range2
+atrp2 = range2 / h2 * 100
+
+per1 = ta.percentrank(atrp1, lookback)
+per2 = ta.percentrank(atrp2, lookback)
+
+setting1 = per1 <= percentile2 and per1 > percentile1
+rangepivot = per1 <= percentile1 and atrp1 <= 10
+closepivot = atrp2 <= closerange
+
+pivot = rangepivot or closepivot
+
+sessioncolor2 = setting1 and bullishtrenddef ? color.yellow : na
+//sessioncolor3 = rangepivot and bullishtrenddef? color.blue :na
+sessioncolor3 = rangepivot and (red_is_meet_all_wide_close_criteria or yellow_is_meet_all_wide_criteria or green_is_meet_all_wide_criteria) ? color.blue : na
+//sessioncolor4 = closepivot and bullishtrenddef? color.red :na
+sessioncolor4 = closepivot and (red_is_meet_all_wide_close_criteria or yellow_is_meet_all_wide_criteria or green_is_meet_all_wide_criteria) ? color.red : na
+
+//bgcolor(sessioncolor2 , transp=70)
+bgcolor(sessioncolor3, transp=90)
+bgcolor(sessioncolor4, transp=94)
+
+pivot_high_loopback = input(3, 'High Lookback Length')
+h3 = float(ta.highest(high, pivot_high_loopback))
+
+takePer = input(10.0, title='Take Profit %') / 100
+shortPer = input(10.0, title='Stoploss %') / 100
+
+//-----FILL LOWER RISK CENT TRADES----
+//1c
+riskline1 = hline(8.14, linestyle=hline.style_dotted)
+riskline2 = hline(7.83, linestyle=hline.style_dotted)
+fill(riskline1, riskline2, color=color.new(color.green, 93))
+
+//2c
+//hkex3 = hline(20)
+//hkex4 = hline(15.50)
+//fill(hkex3, hkex4, transp=93, color=color.green)
+
+//5c+
+//hkex5 = hline(39)
+//hkex6 = hline(400)
+//fill(hkex5, hkex6, transp=93, color=color.green)
+
+
